@@ -23,5 +23,7 @@ jobs:
       run: pwd; ls
     - name: Install dependencies
       run: pub get
+    - name: ffigen
+      run: pub run ffigen
     - name: Run tests
       run: pub run test

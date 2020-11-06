@@ -5,11 +5,12 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 
 import 'package:zstd_ffi/zstd_ffi.dart';
+import 'package:zstd_ffi/_zstd.dart' show ZSTD_VERSION_STRING, ZSTD_VERSION_NUMBER;
 
 void main() {
   test('library function', () {
-    expect(versionNumber(), equals(10406));
-    expect(versionString(), equals('1.4.6'));
+    expect(versionNumber(), equals(ZSTD_VERSION_NUMBER));
+    expect(versionString(), equals(ZSTD_VERSION_STRING));
   });
 
   test('compress and decompress', () {
