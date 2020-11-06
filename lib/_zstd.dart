@@ -11,8 +11,6 @@ class ZStd {
   /// The symbols are looked up in [dynamicLibrary].
   ZStd(ffi.DynamicLibrary dynamicLibrary) : _dylib = dynamicLibrary;
 
-  /// ! ZSTD_versionNumber() :
-  /// Return runtime library version, the value is (MAJOR*100*100 + MINOR*100 + RELEASE).
   int ZSTD_versionNumber() {
     _ZSTD_versionNumber ??=
         _dylib.lookupFunction<_c_ZSTD_versionNumber, _dart_ZSTD_versionNumber>(
@@ -22,8 +20,6 @@ class ZStd {
 
   _dart_ZSTD_versionNumber _ZSTD_versionNumber;
 
-  /// ! ZSTD_versionString() :
-  /// Return runtime library version, like "1.4.5". Requires v1.3.0+.
   ffi.Pointer<ffi.Int8> ZSTD_versionString() {
     _ZSTD_versionString ??=
         _dylib.lookupFunction<_c_ZSTD_versionString, _dart_ZSTD_versionString>(
@@ -33,13 +29,6 @@ class ZStd {
 
   _dart_ZSTD_versionString _ZSTD_versionString;
 
-  /// Simple API
-  ///
-  /// ! ZSTD_compress() :
-  /// Compresses `src` content as a single zstd compressed frame into already allocated `dst`.
-  /// Hint : compression runs faster if `dstCapacity` >=  `ZSTD_compressBound(srcSize)`.
-  /// @return : compressed size written into `dst` (<= `dstCapacity),
-  /// or an error code if it fails (which can be tested using ZSTD_isError()).
   int ZSTD_compress(
     ffi.Pointer<ffi.Void> dst,
     int dstCapacity,
@@ -60,12 +49,6 @@ class ZStd {
 
   _dart_ZSTD_compress _ZSTD_compress;
 
-  /// ! ZSTD_decompress() :
-  /// `compressedSize` : must be the _exact_ size of some number of compressed and/or skippable frames.
-  /// `dstCapacity` is an upper bound of originalSize to regenerate.
-  /// If user cannot imply a maximum upper bound, it's better to use streaming mode to decompress data.
-  /// @return : the number of bytes decompressed into `dst` (<= `dstCapacity`),
-  /// or an errorCode if it fails (which can be tested using ZSTD_isError()).
   int ZSTD_decompress(
     ffi.Pointer<ffi.Void> dst,
     int dstCapacity,
@@ -100,12 +83,6 @@ class ZStd {
 
   _dart_ZSTD_getFrameContentSize _ZSTD_getFrameContentSize;
 
-  /// ! ZSTD_getDecompressedSize() :
-  /// NOTE: This function is now obsolete, in favor of ZSTD_getFrameContentSize().
-  /// Both functions work the same way, but ZSTD_getDecompressedSize() blends
-  /// "empty", "unknown" and "error" results to the same return value (0),
-  /// while ZSTD_getFrameContentSize() gives them separate return values.
-  /// @return : decompressed size of `src` frame content _if known and not empty_, 0 otherwise.
   int ZSTD_getDecompressedSize(
     ffi.Pointer<ffi.Void> src,
     int srcSize,
@@ -121,12 +98,6 @@ class ZStd {
 
   _dart_ZSTD_getDecompressedSize _ZSTD_getDecompressedSize;
 
-  /// ! ZSTD_findFrameCompressedSize() :
-  /// `src` should point to the start of a ZSTD frame or skippable frame.
-  /// `srcSize` must be >= first frame size
-  /// @return : the compressed size of the first frame starting at `src`,
-  /// suitable to pass as `srcSize` to `ZSTD_decompress` or similar,
-  /// or an error code if input is invalid
   int ZSTD_findFrameCompressedSize(
     ffi.Pointer<ffi.Void> src,
     int srcSize,
@@ -219,13 +190,6 @@ class ZStd {
 
   _dart_ZSTD_freeCCtx _ZSTD_freeCCtx;
 
-  /// ! ZSTD_compressCCtx() :
-  /// Same as ZSTD_compress(), using an explicit ZSTD_CCtx.
-  /// Important : in order to behave similarly to `ZSTD_compress()`,
-  /// this function compresses at requested compression level,
-  /// __ignoring any other parameter__ .
-  /// If any advanced parameter was set using the advanced API,
-  /// they will all be reset. Only `compressionLevel` remains.
   int ZSTD_compressCCtx(
     ffi.Pointer<ZSTD_CCtx_s> cctx,
     ffi.Pointer<ffi.Void> dst,
@@ -270,10 +234,6 @@ class ZStd {
 
   _dart_ZSTD_freeDCtx _ZSTD_freeDCtx;
 
-  /// ! ZSTD_decompressDCtx() :
-  /// Same as ZSTD_decompress(),
-  /// requires an allocated ZSTD_DCtx.
-  /// Compatible with sticky parameters.
   int ZSTD_decompressDCtx(
     ffi.Pointer<ZSTD_DCtx_s> dctx,
     ffi.Pointer<ffi.Void> dst,
@@ -294,16 +254,6 @@ class ZStd {
 
   _dart_ZSTD_decompressDCtx _ZSTD_decompressDCtx;
 
-  /// ! ZSTD_CCtx_setParameter() :
-  /// Set one compression parameter, selected by enum ZSTD_cParameter.
-  /// All parameters have valid bounds. Bounds can be queried using ZSTD_cParam_getBounds().
-  /// Providing a value beyond bound will either clamp it, or trigger an error (depending on parameter).
-  /// Setting a parameter is generally only possible during frame initialization (before starting compression).
-  /// Exception : when using multi-threading mode (nbWorkers >= 1),
-  /// the following parameters can be updated _during_ compression (within same frame):
-  /// => compressionLevel, hashLog, chainLog, searchLog, minMatch, targetLength and strategy.
-  /// new parameters will be active for next job only (after a flush()).
-  /// @return : an error code (which can be tested using ZSTD_isError()).
   int ZSTD_CCtx_setParameter(
     ffi.Pointer<ZSTD_CCtx_s> cctx,
     int param,
@@ -320,20 +270,6 @@ class ZStd {
 
   _dart_ZSTD_CCtx_setParameter _ZSTD_CCtx_setParameter;
 
-  /// ! ZSTD_CCtx_setPledgedSrcSize() :
-  /// Total input data size to be compressed as a single frame.
-  /// Value will be written in frame header, unless if explicitly forbidden using ZSTD_c_contentSizeFlag.
-  /// This value will also be controlled at end of frame, and trigger an error if not respected.
-  /// @result : 0, or an error code (which can be tested with ZSTD_isError()).
-  /// Note 1 : pledgedSrcSize==0 actually means zero, aka an empty frame.
-  /// In order to mean "unknown content size", pass constant ZSTD_CONTENTSIZE_UNKNOWN.
-  /// ZSTD_CONTENTSIZE_UNKNOWN is default value for any new frame.
-  /// Note 2 : pledgedSrcSize is only valid once, for the next frame.
-  /// It's discarded at the end of the frame, and replaced by ZSTD_CONTENTSIZE_UNKNOWN.
-  /// Note 3 : Whenever all input data is provided and consumed in a single round,
-  /// for example with ZSTD_compress2(),
-  /// or invoking immediately ZSTD_compressStream2(,,,ZSTD_e_end),
-  /// this value is automatically overridden by srcSize instead.
   int ZSTD_CCtx_setPledgedSrcSize(
     ffi.Pointer<ZSTD_CCtx_s> cctx,
     int pledgedSrcSize,
@@ -349,19 +285,6 @@ class ZStd {
 
   _dart_ZSTD_CCtx_setPledgedSrcSize _ZSTD_CCtx_setPledgedSrcSize;
 
-  /// ! ZSTD_CCtx_reset() :
-  /// There are 2 different things that can be reset, independently or jointly :
-  /// - The session : will stop compressing current frame, and make CCtx ready to start a new one.
-  /// Useful after an error, or to interrupt any ongoing compression.
-  /// Any internal data not yet flushed is cancelled.
-  /// Compression parameters and dictionary remain unchanged.
-  /// They will be used to compress next frame.
-  /// Resetting session never fails.
-  /// - The parameters : changes all parameters back to "default".
-  /// This removes any reference to any dictionary too.
-  /// Parameters can only be changed between 2 sessions (i.e. no compression is currently ongoing)
-  /// otherwise the reset fails, and function returns an error value (which can be tested using ZSTD_isError())
-  /// - Both : similar to resetting the session, followed by resetting parameters.
   int ZSTD_CCtx_reset(
     ffi.Pointer<ZSTD_CCtx_s> cctx,
     int reset,
@@ -377,15 +300,6 @@ class ZStd {
 
   _dart_ZSTD_CCtx_reset _ZSTD_CCtx_reset;
 
-  /// ! ZSTD_compress2() :
-  /// Behave the same as ZSTD_compressCCtx(), but compression parameters are set using the advanced API.
-  /// ZSTD_compress2() always starts a new frame.
-  /// Should cctx hold data from a previously unfinished frame, everything about it is forgotten.
-  /// - Compression parameters are pushed into CCtx before starting compression, using ZSTD_CCtx_set*()
-  /// - The function is always blocking, returns when compression is completed.
-  /// Hint : compression runs faster if `dstCapacity` >=  `ZSTD_compressBound(srcSize)`.
-  /// @return : compressed size written into `dst` (<= `dstCapacity),
-  /// or an error code if it fails (which can be tested using ZSTD_isError()).
   int ZSTD_compress2(
     ffi.Pointer<ZSTD_CCtx_s> cctx,
     ffi.Pointer<ffi.Void> dst,
@@ -407,12 +321,6 @@ class ZStd {
 
   _dart_ZSTD_compress2 _ZSTD_compress2;
 
-  /// ! ZSTD_DCtx_setParameter() :
-  /// Set one compression parameter, selected by enum ZSTD_dParameter.
-  /// All parameters have valid bounds. Bounds can be queried using ZSTD_dParam_getBounds().
-  /// Providing a value beyond bound will either clamp it, or trigger an error (depending on parameter).
-  /// Setting a parameter is only possible during frame initialization (before starting decompression).
-  /// @return : 0, or an error code (which can be tested using ZSTD_isError()).
   int ZSTD_DCtx_setParameter(
     ffi.Pointer<ZSTD_DCtx_s> dctx,
     int param,
@@ -429,11 +337,6 @@ class ZStd {
 
   _dart_ZSTD_DCtx_setParameter _ZSTD_DCtx_setParameter;
 
-  /// ! ZSTD_DCtx_reset() :
-  /// Return a DCtx to clean state.
-  /// Session and parameters can be reset jointly or separately.
-  /// Parameters can only be reset when no active frame is being decompressed.
-  /// @return : 0, or an error code, which can be tested with ZSTD_isError()
   int ZSTD_DCtx_reset(
     ffi.Pointer<ZSTD_DCtx_s> dctx,
     int reset,
@@ -471,27 +374,6 @@ class ZStd {
 
   _dart_ZSTD_freeCStream _ZSTD_freeCStream;
 
-  /// ! ZSTD_compressStream2() :
-  /// Behaves about the same as ZSTD_compressStream, with additional control on end directive.
-  /// - Compression parameters are pushed into CCtx before starting compression, using ZSTD_CCtx_set*()
-  /// - Compression parameters cannot be changed once compression is started (save a list of exceptions in multi-threading mode)
-  /// - output->pos must be <= dstCapacity, input->pos must be <= srcSize
-  /// - output->pos and input->pos will be updated. They are guaranteed to remain below their respective limit.
-  /// - endOp must be a valid directive
-  /// - When nbWorkers==0 (default), function is blocking : it completes its job before returning to caller.
-  /// - When nbWorkers>=1, function is non-blocking : it copies a portion of input, distributes jobs to internal worker threads, flush to output whatever is available,
-  /// and then immediately returns, just indicating that there is some data remaining to be flushed.
-  /// The function nonetheless guarantees forward progress : it will return only after it reads or write at least 1+ byte.
-  /// - Exception : if the first call requests a ZSTD_e_end directive and provides enough dstCapacity, the function delegates to ZSTD_compress2() which is always blocking.
-  /// - @return provides a minimum amount of data remaining to be flushed from internal buffers
-  /// or an error code, which can be tested using ZSTD_isError().
-  /// if @return != 0, flush is not fully completed, there is still some data left within internal buffers.
-  /// This is useful for ZSTD_e_flush, since in this case more flushes are necessary to empty all buffers.
-  /// For ZSTD_e_end, @return == 0 when internal buffers are fully flushed and frame is completed.
-  /// - after a ZSTD_e_end directive, if internal buffer is not fully flushed (@return != 0),
-  /// only ZSTD_e_end or ZSTD_e_flush operations are allowed.
-  /// Before starting a new compression job, or changing compression parameters,
-  /// it is required to fully flush internal buffers.
   int ZSTD_compressStream2(
     ffi.Pointer<ZSTD_CCtx_s> cctx,
     ffi.Pointer<ZSTD_outBuffer> output,
@@ -527,12 +409,6 @@ class ZStd {
 
   _dart_ZSTD_CStreamOutSize _ZSTD_CStreamOutSize;
 
-  /// !
-  /// Equivalent to:
-  ///
-  /// ZSTD_CCtx_reset(zcs, ZSTD_reset_session_only);
-  /// ZSTD_CCtx_refCDict(zcs, NULL); // clear the dictionary (if any)
-  /// ZSTD_CCtx_setParameter(zcs, ZSTD_c_compressionLevel, compressionLevel);
   int ZSTD_initCStream(
     ffi.Pointer<ZSTD_CCtx_s> zcs,
     int compressionLevel,
@@ -548,11 +424,6 @@ class ZStd {
 
   _dart_ZSTD_initCStream _ZSTD_initCStream;
 
-  /// !
-  /// Alternative for ZSTD_compressStream2(zcs, output, input, ZSTD_e_continue).
-  /// NOTE: The return value is different. ZSTD_compressStream() returns a hint for
-  /// the next read size (if non-zero and not an error). ZSTD_compressStream2()
-  /// returns the minimum nb of bytes left to flush (if non-zero and not an error).
   int ZSTD_compressStream(
     ffi.Pointer<ZSTD_CCtx_s> zcs,
     ffi.Pointer<ZSTD_outBuffer> output,
@@ -569,7 +440,6 @@ class ZStd {
 
   _dart_ZSTD_compressStream _ZSTD_compressStream;
 
-  /// ! Equivalent to ZSTD_compressStream2(zcs, output, &emptyInput, ZSTD_e_flush).
   int ZSTD_flushStream(
     ffi.Pointer<ZSTD_CCtx_s> zcs,
     ffi.Pointer<ZSTD_outBuffer> output,
@@ -585,7 +455,6 @@ class ZStd {
 
   _dart_ZSTD_flushStream _ZSTD_flushStream;
 
-  /// ! Equivalent to ZSTD_compressStream2(zcs, output, &emptyInput, ZSTD_e_end).
   int ZSTD_endStream(
     ffi.Pointer<ZSTD_CCtx_s> zcs,
     ffi.Pointer<ZSTD_outBuffer> output,
@@ -669,15 +538,6 @@ class ZStd {
 
   _dart_ZSTD_DStreamOutSize _ZSTD_DStreamOutSize;
 
-  /// Simple dictionary API
-  ///
-  /// ! ZSTD_compress_usingDict() :
-  /// Compression at an explicit compression level using a Dictionary.
-  /// A dictionary can be any arbitrary data segment (also called a prefix),
-  /// or a buffer with specified information (see dictBuilder/zdict.h).
-  /// Note : This function loads the dictionary, resulting in significant startup delay.
-  /// It's intended for a dictionary used only once.
-  /// Note 2 : When `dict == NULL || dictSize < 8` no dictionary is used.
   int ZSTD_compress_usingDict(
     ffi.Pointer<ZSTD_CCtx_s> ctx,
     ffi.Pointer<ffi.Void> dst,
@@ -705,12 +565,6 @@ class ZStd {
 
   _dart_ZSTD_compress_usingDict _ZSTD_compress_usingDict;
 
-  /// ! ZSTD_decompress_usingDict() :
-  /// Decompression using a known Dictionary.
-  /// Dictionary must be identical to the one used during compression.
-  /// Note : This function loads the dictionary, resulting in significant startup delay.
-  /// It's intended for a dictionary used only once.
-  /// Note : When `dict == NULL || dictSize < 8` no dictionary is used.
   int ZSTD_decompress_usingDict(
     ffi.Pointer<ZSTD_DCtx_s> dctx,
     ffi.Pointer<ffi.Void> dst,
@@ -736,18 +590,6 @@ class ZStd {
 
   _dart_ZSTD_decompress_usingDict _ZSTD_decompress_usingDict;
 
-  /// ! ZSTD_createCDict() :
-  /// When compressing multiple messages or blocks using the same dictionary,
-  /// it's recommended to digest the dictionary only once, since it's a costly operation.
-  /// ZSTD_createCDict() will create a state from digesting a dictionary.
-  /// The resulting state can be used for future compression operations with very limited startup cost.
-  /// ZSTD_CDict can be created once and shared by multiple threads concurrently, since its usage is read-only.
-  /// @dictBuffer can be released after ZSTD_CDict creation, because its content is copied within CDict.
-  /// Note 1 : Consider experimental function `ZSTD_createCDict_byReference()` if you prefer to not duplicate @dictBuffer content.
-  /// Note 2 : A ZSTD_CDict can be created from an empty @dictBuffer,
-  /// in which case the only thing that it transports is the @compressionLevel.
-  /// This can be useful in a pipeline featuring ZSTD_compress_usingCDict() exclusively,
-  /// expecting a ZSTD_CDict parameter with any data, including those without a known dictionary.
   ffi.Pointer<ZSTD_CDict_s> ZSTD_createCDict(
     ffi.Pointer<ffi.Void> dictBuffer,
     int dictSize,
@@ -765,8 +607,6 @@ class ZStd {
 
   _dart_ZSTD_createCDict _ZSTD_createCDict;
 
-  /// ! ZSTD_freeCDict() :
-  /// Function frees memory allocated by ZSTD_createCDict().
   int ZSTD_freeCDict(
     ffi.Pointer<ZSTD_CDict_s> CDict,
   ) {
@@ -780,11 +620,6 @@ class ZStd {
 
   _dart_ZSTD_freeCDict _ZSTD_freeCDict;
 
-  /// ! ZSTD_compress_usingCDict() :
-  /// Compression using a digested Dictionary.
-  /// Recommended when same dictionary is used multiple times.
-  /// Note : compression level is _decided at dictionary creation time_,
-  /// and frame parameters are hardcoded (dictID=yes, contentSize=yes, checksum=no)
   int ZSTD_compress_usingCDict(
     ffi.Pointer<ZSTD_CCtx_s> cctx,
     ffi.Pointer<ffi.Void> dst,
@@ -808,9 +643,6 @@ class ZStd {
 
   _dart_ZSTD_compress_usingCDict _ZSTD_compress_usingCDict;
 
-  /// ! ZSTD_createDDict() :
-  /// Create a digested dictionary, ready to start decompression operation without startup delay.
-  /// dictBuffer can be released after DDict creation, as its content is copied inside DDict.
   ffi.Pointer<ZSTD_DDict_s> ZSTD_createDDict(
     ffi.Pointer<ffi.Void> dictBuffer,
     int dictSize,
@@ -826,8 +658,6 @@ class ZStd {
 
   _dart_ZSTD_createDDict _ZSTD_createDDict;
 
-  /// ! ZSTD_freeDDict() :
-  /// Function frees memory allocated with ZSTD_createDDict()
   int ZSTD_freeDDict(
     ffi.Pointer<ZSTD_DDict_s> ddict,
   ) {
@@ -841,9 +671,6 @@ class ZStd {
 
   _dart_ZSTD_freeDDict _ZSTD_freeDDict;
 
-  /// ! ZSTD_decompress_usingDDict() :
-  /// Decompression using a digested Dictionary.
-  /// Recommended when same dictionary is used multiple times.
   int ZSTD_decompress_usingDDict(
     ffi.Pointer<ZSTD_DCtx_s> dctx,
     ffi.Pointer<ffi.Void> dst,
@@ -867,10 +694,6 @@ class ZStd {
 
   _dart_ZSTD_decompress_usingDDict _ZSTD_decompress_usingDDict;
 
-  /// ! ZSTD_getDictID_fromDict() :
-  /// Provides the dictID stored within dictionary.
-  /// if @return == 0, the dictionary is not conformant with Zstandard specification.
-  /// It can still be loaded, but as a content-only dictionary.
   int ZSTD_getDictID_fromDict(
     ffi.Pointer<ffi.Void> dict,
     int dictSize,
@@ -886,10 +709,6 @@ class ZStd {
 
   _dart_ZSTD_getDictID_fromDict _ZSTD_getDictID_fromDict;
 
-  /// ! ZSTD_getDictID_fromDDict() :
-  /// Provides the dictID of the dictionary loaded into `ddict`.
-  /// If @return == 0, the dictionary is not conformant to Zstandard specification, or empty.
-  /// Non-conformant dictionaries can still be loaded, but as content-only dictionaries.
   int ZSTD_getDictID_fromDDict(
     ffi.Pointer<ZSTD_DDict_s> ddict,
   ) {
@@ -903,16 +722,6 @@ class ZStd {
 
   _dart_ZSTD_getDictID_fromDDict _ZSTD_getDictID_fromDDict;
 
-  /// ! ZSTD_getDictID_fromFrame() :
-  /// Provides the dictID required to decompressed the frame stored within `src`.
-  /// If @return == 0, the dictID could not be decoded.
-  /// This could for one of the following reasons :
-  /// - The frame does not require a dictionary to be decoded (most common case).
-  /// - The frame was built with dictID intentionally removed. Whatever dictionary is necessary is a hidden information.
-  /// Note : this use case also happens when using a non-conformant dictionary.
-  /// - `srcSize` is too small, and as a result, the frame header could not be decoded (only possible if `srcSize < ZSTD_FRAMEHEADERSIZE_MAX`).
-  /// - This is not a Zstandard frame.
-  /// When identifying the exact failure cause, it's possible to use ZSTD_getFrameHeader(), which will provide a more precise error code.
   int ZSTD_getDictID_fromFrame(
     ffi.Pointer<ffi.Void> src,
     int srcSize,
@@ -928,23 +737,6 @@ class ZStd {
 
   _dart_ZSTD_getDictID_fromFrame _ZSTD_getDictID_fromFrame;
 
-  /// ! ZSTD_CCtx_loadDictionary() :
-  /// Create an internal CDict from `dict` buffer.
-  /// Decompression will have to use same dictionary.
-  /// @result : 0, or an error code (which can be tested with ZSTD_isError()).
-  /// Special: Loading a NULL (or 0-size) dictionary invalidates previous dictionary,
-  /// meaning "return to no-dictionary mode".
-  /// Note 1 : Dictionary is sticky, it will be used for all future compressed frames.
-  /// To return to "no-dictionary" situation, load a NULL dictionary (or reset parameters).
-  /// Note 2 : Loading a dictionary involves building tables.
-  /// It's also a CPU consuming operation, with non-negligible impact on latency.
-  /// Tables are dependent on compression parameters, and for this reason,
-  /// compression parameters can no longer be changed after loading a dictionary.
-  /// Note 3 :`dict` content will be copied internally.
-  /// Use experimental ZSTD_CCtx_loadDictionary_byReference() to reference content instead.
-  /// In such a case, dictionary buffer must outlive its users.
-  /// Note 4 : Use ZSTD_CCtx_loadDictionary_advanced()
-  /// to precisely select how dictionary content must be interpreted.
   int ZSTD_CCtx_loadDictionary(
     ffi.Pointer<ZSTD_CCtx_s> cctx,
     ffi.Pointer<ffi.Void> dict,
@@ -962,18 +754,6 @@ class ZStd {
 
   _dart_ZSTD_CCtx_loadDictionary _ZSTD_CCtx_loadDictionary;
 
-  /// ! ZSTD_CCtx_refCDict() :
-  /// Reference a prepared dictionary, to be used for all next compressed frames.
-  /// Note that compression parameters are enforced from within CDict,
-  /// and supersede any compression parameter previously set within CCtx.
-  /// The parameters ignored are labled as "superseded-by-cdict" in the ZSTD_cParameter enum docs.
-  /// The ignored parameters will be used again if the CCtx is returned to no-dictionary mode.
-  /// The dictionary will remain valid for future compressed frames using same CCtx.
-  /// @result : 0, or an error code (which can be tested with ZSTD_isError()).
-  /// Special : Referencing a NULL CDict means "return to no-dictionary mode".
-  /// Note 1 : Currently, only one dictionary can be managed.
-  /// Referencing a new dictionary effectively "discards" any previous one.
-  /// Note 2 : CDict is just referenced, its lifetime must outlive its usage within CCtx.
   int ZSTD_CCtx_refCDict(
     ffi.Pointer<ZSTD_CCtx_s> cctx,
     ffi.Pointer<ZSTD_CDict_s> cdict,
@@ -989,24 +769,6 @@ class ZStd {
 
   _dart_ZSTD_CCtx_refCDict _ZSTD_CCtx_refCDict;
 
-  /// ! ZSTD_CCtx_refPrefix() :
-  /// Reference a prefix (single-usage dictionary) for next compressed frame.
-  /// A prefix is **only used once**. Tables are discarded at end of frame (ZSTD_e_end).
-  /// Decompression will need same prefix to properly regenerate data.
-  /// Compressing with a prefix is similar in outcome as performing a diff and compressing it,
-  /// but performs much faster, especially during decompression (compression speed is tunable with compression level).
-  /// @result : 0, or an error code (which can be tested with ZSTD_isError()).
-  /// Special: Adding any prefix (including NULL) invalidates any previous prefix or dictionary
-  /// Note 1 : Prefix buffer is referenced. It **must** outlive compression.
-  /// Its content must remain unmodified during compression.
-  /// Note 2 : If the intention is to diff some large src data blob with some prior version of itself,
-  /// ensure that the window size is large enough to contain the entire source.
-  /// See ZSTD_c_windowLog.
-  /// Note 3 : Referencing a prefix involves building tables, which are dependent on compression parameters.
-  /// It's a CPU consuming operation, with non-negligible impact on latency.
-  /// If there is a need to use the same prefix multiple times, consider loadDictionary instead.
-  /// Note 4 : By default, the prefix is interpreted as raw content (ZSTD_dct_rawContent).
-  /// Use experimental ZSTD_CCtx_refPrefix_advanced() to alter dictionary interpretation.
   int ZSTD_CCtx_refPrefix(
     ffi.Pointer<ZSTD_CCtx_s> cctx,
     ffi.Pointer<ffi.Void> prefix,
@@ -1023,20 +785,6 @@ class ZStd {
 
   _dart_ZSTD_CCtx_refPrefix _ZSTD_CCtx_refPrefix;
 
-  /// ! ZSTD_DCtx_loadDictionary() :
-  /// Create an internal DDict from dict buffer,
-  /// to be used to decompress next frames.
-  /// The dictionary remains valid for all future frames, until explicitly invalidated.
-  /// @result : 0, or an error code (which can be tested with ZSTD_isError()).
-  /// Special : Adding a NULL (or 0-size) dictionary invalidates any previous dictionary,
-  /// meaning "return to no-dictionary mode".
-  /// Note 1 : Loading a dictionary involves building tables,
-  /// which has a non-negligible impact on CPU usage and latency.
-  /// It's recommended to "load once, use many times", to amortize the cost
-  /// Note 2 :`dict` content will be copied internally, so `dict` can be released after loading.
-  /// Use ZSTD_DCtx_loadDictionary_byReference() to reference dictionary content instead.
-  /// Note 3 : Use ZSTD_DCtx_loadDictionary_advanced() to take control of
-  /// how dictionary content is loaded and interpreted.
   int ZSTD_DCtx_loadDictionary(
     ffi.Pointer<ZSTD_DCtx_s> dctx,
     ffi.Pointer<ffi.Void> dict,
@@ -1054,14 +802,6 @@ class ZStd {
 
   _dart_ZSTD_DCtx_loadDictionary _ZSTD_DCtx_loadDictionary;
 
-  /// ! ZSTD_DCtx_refDDict() :
-  /// Reference a prepared dictionary, to be used to decompress next frames.
-  /// The dictionary remains active for decompression of future frames using same DCtx.
-  /// @result : 0, or an error code (which can be tested with ZSTD_isError()).
-  /// Note 1 : Currently, only one dictionary can be managed.
-  /// Referencing a new dictionary effectively "discards" any previous one.
-  /// Special: referencing a NULL DDict means "return to no-dictionary mode".
-  /// Note 2 : DDict is just referenced, its lifetime must outlive its usage from DCtx.
   int ZSTD_DCtx_refDDict(
     ffi.Pointer<ZSTD_DCtx_s> dctx,
     ffi.Pointer<ZSTD_DDict_s> ddict,
@@ -1077,21 +817,6 @@ class ZStd {
 
   _dart_ZSTD_DCtx_refDDict _ZSTD_DCtx_refDDict;
 
-  /// ! ZSTD_DCtx_refPrefix() :
-  /// Reference a prefix (single-usage dictionary) to decompress next frame.
-  /// This is the reverse operation of ZSTD_CCtx_refPrefix(),
-  /// and must use the same prefix as the one used during compression.
-  /// Prefix is **only used once**. Reference is discarded at end of frame.
-  /// End of frame is reached when ZSTD_decompressStream() returns 0.
-  /// @result : 0, or an error code (which can be tested with ZSTD_isError()).
-  /// Note 1 : Adding any prefix (including NULL) invalidates any previously set prefix or dictionary
-  /// Note 2 : Prefix buffer is referenced. It **must** outlive decompression.
-  /// Prefix buffer must remain unmodified up to the end of frame,
-  /// reached when ZSTD_decompressStream() returns 0.
-  /// Note 3 : By default, the prefix is treated as raw content (ZSTD_dct_rawContent).
-  /// Use ZSTD_CCtx_refPrefix_advanced() to alter dictMode (Experimental section)
-  /// Note 4 : Referencing a raw content prefix has almost no cpu nor memory cost.
-  /// A full dictionary is more costly, as it requires building tables.
   int ZSTD_DCtx_refPrefix(
     ffi.Pointer<ZSTD_DCtx_s> dctx,
     ffi.Pointer<ffi.Void> prefix,
@@ -1108,9 +833,6 @@ class ZStd {
 
   _dart_ZSTD_DCtx_refPrefix _ZSTD_DCtx_refPrefix;
 
-  /// ! ZSTD_sizeof_*() :
-  /// These functions give the _current_ memory usage of selected object.
-  /// Note that object memory usage can evolve (increase or decrease) over time.
   int ZSTD_sizeof_CCtx(
     ffi.Pointer<ZSTD_CCtx_s> cctx,
   ) {
@@ -1188,37 +910,10 @@ class ZStd {
   _dart_ZSTD_sizeof_DDict _ZSTD_sizeof_DDict;
 }
 
-class __darwin_pthread_handler_rec extends ffi.Struct {
-  ffi.Pointer<ffi.NativeFunction<_typedefC_1>> __routine;
-
-  ffi.Pointer<ffi.Void> __arg;
-
-  ffi.Pointer<__darwin_pthread_handler_rec> __next;
-}
-
-class _opaque_pthread_attr_t extends ffi.Struct {}
-
-class _opaque_pthread_cond_t extends ffi.Struct {}
-
-class _opaque_pthread_condattr_t extends ffi.Struct {}
-
-class _opaque_pthread_mutex_t extends ffi.Struct {}
-
-class _opaque_pthread_mutexattr_t extends ffi.Struct {}
-
-class _opaque_pthread_once_t extends ffi.Struct {}
-
-class _opaque_pthread_rwlock_t extends ffi.Struct {}
-
-class _opaque_pthread_rwlockattr_t extends ffi.Struct {}
-
-class _opaque_pthread_t extends ffi.Struct {}
-
 class ZSTD_CCtx_s extends ffi.Struct {}
 
 class ZSTD_DCtx_s extends ffi.Struct {}
 
-/// Advanced compression API
 abstract class ZSTD_strategy {
   static const int ZSTD_fast = 1;
   static const int ZSTD_dfast = 2;
@@ -1280,7 +975,6 @@ abstract class ZSTD_ResetDirective {
   static const int ZSTD_reset_session_and_parameters = 3;
 }
 
-/// Advanced decompression API
 abstract class ZSTD_dParameter {
   static const int ZSTD_d_windowLogMax = 100;
   static const int ZSTD_d_experimentalParam1 = 1000;
@@ -1288,29 +982,22 @@ abstract class ZSTD_dParameter {
   static const int ZSTD_d_experimentalParam3 = 1002;
 }
 
-/// Streaming
 class ZSTD_inBuffer extends ffi.Struct {
-  /// < start of input buffer
   ffi.Pointer<ffi.Void> src;
 
-  /// < size of input buffer
   @ffi.Uint64()
   int size;
 
-  /// < position where reading stopped. Will be updated. Necessarily 0 <= pos <= size
   @ffi.Uint64()
   int pos;
 }
 
 class ZSTD_outBuffer extends ffi.Struct {
-  /// < start of output buffer
   ffi.Pointer<ffi.Void> dst;
 
-  /// < size of output buffer
   @ffi.Uint64()
   int size;
 
-  /// < position where writing stopped. Will be updated. Necessarily 0 <= pos <= size
   @ffi.Uint64()
   int pos;
 }
@@ -1324,304 +1011,6 @@ abstract class ZSTD_EndDirective {
 class ZSTD_CDict_s extends ffi.Struct {}
 
 class ZSTD_DDict_s extends ffi.Struct {}
-
-const int __DARWIN_ONLY_64_BIT_INO_T = 0;
-
-const int __DARWIN_ONLY_VERS_1050 = 0;
-
-const int __DARWIN_ONLY_UNIX_CONFORMANCE = 1;
-
-const int __DARWIN_UNIX03 = 1;
-
-const int __DARWIN_64_BIT_INO_T = 1;
-
-const int __DARWIN_VERS_1050 = 1;
-
-const int __DARWIN_NON_CANCELABLE = 0;
-
-const String __DARWIN_SUF_64_BIT_INO_T = '\$INODE64';
-
-const String __DARWIN_SUF_1050 = '\$1050';
-
-const String __DARWIN_SUF_EXTSN = '\$DARWIN_EXTSN';
-
-const int __DARWIN_C_ANSI = 4096;
-
-const int __DARWIN_C_FULL = 900000;
-
-const int __DARWIN_C_LEVEL = 900000;
-
-const int __STDC_WANT_LIB_EXT1__ = 1;
-
-const int __DARWIN_NO_LONG_LONG = 0;
-
-const int _DARWIN_FEATURE_64_BIT_INODE = 1;
-
-const int _DARWIN_FEATURE_ONLY_UNIX_CONFORMANCE = 1;
-
-const int _DARWIN_FEATURE_UNIX_CONFORMANCE = 3;
-
-const int __DARWIN_CLK_TCK = 100;
-
-const int CHAR_BIT = 8;
-
-const int MB_LEN_MAX = 6;
-
-const int CLK_TCK = 100;
-
-const int SCHAR_MAX = 127;
-
-const int SCHAR_MIN = -128;
-
-const int UCHAR_MAX = 255;
-
-const int CHAR_MAX = 127;
-
-const int CHAR_MIN = -128;
-
-const int USHRT_MAX = 65535;
-
-const int SHRT_MAX = 32767;
-
-const int SHRT_MIN = -32768;
-
-const int UINT_MAX = 4294967295;
-
-const int INT_MAX = 2147483647;
-
-const int INT_MIN = -2147483648;
-
-const int ULONG_MAX = -1;
-
-const int LONG_MAX = 9223372036854775807;
-
-const int LONG_MIN = -9223372036854775808;
-
-const int ULLONG_MAX = -1;
-
-const int LLONG_MAX = 9223372036854775807;
-
-const int LLONG_MIN = -9223372036854775808;
-
-const int LONG_BIT = 64;
-
-const int SSIZE_MAX = 9223372036854775807;
-
-const int WORD_BIT = 32;
-
-const int SIZE_T_MAX = -1;
-
-const int UQUAD_MAX = -1;
-
-const int QUAD_MAX = 9223372036854775807;
-
-const int QUAD_MIN = -9223372036854775808;
-
-const int ARG_MAX = 262144;
-
-const int CHILD_MAX = 266;
-
-const int GID_MAX = 2147483647;
-
-const int LINK_MAX = 32767;
-
-const int MAX_CANON = 1024;
-
-const int MAX_INPUT = 1024;
-
-const int NAME_MAX = 255;
-
-const int NGROUPS_MAX = 16;
-
-const int UID_MAX = 2147483647;
-
-const int OPEN_MAX = 10240;
-
-const int PATH_MAX = 1024;
-
-const int PIPE_BUF = 512;
-
-const int BC_BASE_MAX = 99;
-
-const int BC_DIM_MAX = 2048;
-
-const int BC_SCALE_MAX = 99;
-
-const int BC_STRING_MAX = 1000;
-
-const int CHARCLASS_NAME_MAX = 14;
-
-const int COLL_WEIGHTS_MAX = 2;
-
-const int EQUIV_CLASS_MAX = 2;
-
-const int EXPR_NEST_MAX = 32;
-
-const int LINE_MAX = 2048;
-
-const int RE_DUP_MAX = 255;
-
-const int NZERO = 20;
-
-const int _POSIX_ARG_MAX = 4096;
-
-const int _POSIX_CHILD_MAX = 25;
-
-const int _POSIX_LINK_MAX = 8;
-
-const int _POSIX_MAX_CANON = 255;
-
-const int _POSIX_MAX_INPUT = 255;
-
-const int _POSIX_NAME_MAX = 14;
-
-const int _POSIX_NGROUPS_MAX = 8;
-
-const int _POSIX_OPEN_MAX = 20;
-
-const int _POSIX_PATH_MAX = 256;
-
-const int _POSIX_PIPE_BUF = 512;
-
-const int _POSIX_SSIZE_MAX = 32767;
-
-const int _POSIX_STREAM_MAX = 8;
-
-const int _POSIX_TZNAME_MAX = 6;
-
-const int _POSIX2_BC_BASE_MAX = 99;
-
-const int _POSIX2_BC_DIM_MAX = 2048;
-
-const int _POSIX2_BC_SCALE_MAX = 99;
-
-const int _POSIX2_BC_STRING_MAX = 1000;
-
-const int _POSIX2_EQUIV_CLASS_MAX = 2;
-
-const int _POSIX2_EXPR_NEST_MAX = 32;
-
-const int _POSIX2_LINE_MAX = 2048;
-
-const int _POSIX2_RE_DUP_MAX = 255;
-
-const int _POSIX_AIO_LISTIO_MAX = 2;
-
-const int _POSIX_AIO_MAX = 1;
-
-const int _POSIX_DELAYTIMER_MAX = 32;
-
-const int _POSIX_MQ_OPEN_MAX = 8;
-
-const int _POSIX_MQ_PRIO_MAX = 32;
-
-const int _POSIX_RTSIG_MAX = 8;
-
-const int _POSIX_SEM_NSEMS_MAX = 256;
-
-const int _POSIX_SEM_VALUE_MAX = 32767;
-
-const int _POSIX_SIGQUEUE_MAX = 32;
-
-const int _POSIX_TIMER_MAX = 32;
-
-const int _POSIX_CLOCKRES_MIN = 20000000;
-
-const int _POSIX_THREAD_DESTRUCTOR_ITERATIONS = 4;
-
-const int _POSIX_THREAD_KEYS_MAX = 128;
-
-const int _POSIX_THREAD_THREADS_MAX = 64;
-
-const int PTHREAD_DESTRUCTOR_ITERATIONS = 4;
-
-const int PTHREAD_KEYS_MAX = 512;
-
-const int PTHREAD_STACK_MIN = 8192;
-
-const int _POSIX_HOST_NAME_MAX = 255;
-
-const int _POSIX_LOGIN_NAME_MAX = 9;
-
-const int _POSIX_SS_REPL_MAX = 4;
-
-const int _POSIX_SYMLINK_MAX = 255;
-
-const int _POSIX_SYMLOOP_MAX = 8;
-
-const int _POSIX_TRACE_EVENT_NAME_MAX = 30;
-
-const int _POSIX_TRACE_NAME_MAX = 8;
-
-const int _POSIX_TRACE_SYS_MAX = 8;
-
-const int _POSIX_TRACE_USER_EVENT_MAX = 32;
-
-const int _POSIX_TTY_NAME_MAX = 9;
-
-const int _POSIX2_CHARCLASS_NAME_MAX = 14;
-
-const int _POSIX2_COLL_WEIGHTS_MAX = 2;
-
-const int _POSIX_RE_DUP_MAX = 255;
-
-const int OFF_MIN = -9223372036854775808;
-
-const int OFF_MAX = 9223372036854775807;
-
-const int PASS_MAX = 128;
-
-const int NL_ARGMAX = 9;
-
-const int NL_LANGMAX = 14;
-
-const int NL_MSGMAX = 32767;
-
-const int NL_NMAX = 1;
-
-const int NL_SETMAX = 255;
-
-const int NL_TEXTMAX = 2048;
-
-const int _XOPEN_IOV_MAX = 16;
-
-const int IOV_MAX = 1024;
-
-const int _XOPEN_NAME_MAX = 255;
-
-const int _XOPEN_PATH_MAX = 1024;
-
-const int __DARWIN_NULL = 0;
-
-const int __PTHREAD_SIZE__ = 8176;
-
-const int __PTHREAD_ATTR_SIZE__ = 56;
-
-const int __PTHREAD_MUTEXATTR_SIZE__ = 8;
-
-const int __PTHREAD_MUTEX_SIZE__ = 56;
-
-const int __PTHREAD_CONDATTR_SIZE__ = 8;
-
-const int __PTHREAD_COND_SIZE__ = 40;
-
-const int __PTHREAD_ONCE_SIZE__ = 8;
-
-const int __PTHREAD_RWLOCK_SIZE__ = 192;
-
-const int __PTHREAD_RWLOCKATTR_SIZE__ = 16;
-
-const int __DARWIN_WCHAR_MAX = 2147483647;
-
-const int __DARWIN_WCHAR_MIN = -2147483648;
-
-const int __DARWIN_WEOF = -1;
-
-const int _FORTIFY_SOURCE = 2;
-
-const int NULL = 0;
-
-const int USER_ADDR_NULL = 0;
 
 const int ZSTD_VERSION_MAJOR = 1;
 
@@ -2253,8 +1642,4 @@ typedef _c_ZSTD_sizeof_DDict = ffi.Uint64 Function(
 
 typedef _dart_ZSTD_sizeof_DDict = int Function(
   ffi.Pointer<ZSTD_DDict_s> ddict,
-);
-
-typedef _typedefC_1 = ffi.Void Function(
-  ffi.Pointer<ffi.Void>,
 );
