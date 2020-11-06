@@ -26,9 +26,9 @@ class Level {
 }
 
 String _getPath() {
-  var path = 'libzstd.so';
+  var path = './libzstd.so';
   if (Platform.isMacOS) {
-    path = 'libzstd.dylib';
+    path = './libzstd.dylib';
   }
   if (Platform.isWindows) {
     path = 'zstd.dll';
