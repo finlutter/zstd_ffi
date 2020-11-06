@@ -1,3 +1,7 @@
+## 0.0.3
+
+Fix load library failed in Linux
+
 ## 0.0.2
 
 Add CompressionContext
