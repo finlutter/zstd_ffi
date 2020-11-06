@@ -19,6 +19,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: ls
+      run: pwd; ls
     - name: Install dependencies
       run: pub get
     - name: Run tests
