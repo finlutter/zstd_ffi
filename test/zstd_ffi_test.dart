@@ -33,7 +33,7 @@ void main() {
   });
 
   test('bulk compress', () {
-    final ctx = CompressionContext.create();
+    final ctx = Context.create();
 
     Uint8List src = utf8.encode('hello zstd');
 
@@ -46,8 +46,35 @@ void main() {
     }
 
     expect(dst, isNotEmpty);
+    expect(dst.length, equals(19));
 
     final plain = decompress(dst);
+    expect(plain, isNotEmpty);
+    expect(plain, equals(src));
+  });
+
+  test('with dict', () {
+    final ctx = Context.create();
+    final dctx = DecContext.create();
+
+    Uint8List src = utf8.encode('hello zstd');
+
+    var dst;
+
+    final dict = Dict.create(File('dict/k500-d8.dict').readAsBytesSync());
+    final decdict = DecDict.create(File('dict/k500-d8.dict').readAsBytesSync());
+
+    try {
+      dst = ctx.compress(src, dict: dict);
+    } finally {
+      ctx.dispose();
+      dict.dispose();
+    }
+
+    expect(dst, isNotEmpty);
+    expect(dst.length, equals(23));
+
+    final plain = dctx.decompress(dst, dict: decdict);
     expect(plain, isNotEmpty);
     expect(plain, equals(src));
   });

@@ -1,3 +1,7 @@
+## 0.0.5
+
+Add Context/DecContext and Dict/DecDict.
+
 ## 0.0.3
 
 Fix load library failed in Linux

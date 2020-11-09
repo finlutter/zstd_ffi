@@ -128,16 +128,16 @@ Uint8List decompress(Uint8List src) {
 
 ///
 ///
-class CompressionDict {
-  CompressionDict({this.cdict});
+class Dict {
+  Dict({this.cdict});
 
   ffi.Pointer<ZSTD_CDict_s> cdict;
 
-  factory CompressionDict.create(Uint8List dict, {int level: Level.levelDefault}) {
-    final csrc = Uint8ArrayUtils.toPointer(dict);
+  factory Dict.create(Uint8List dictBuffer, {int level: Level.levelDefault}) {
+    final csrc = Uint8ArrayUtils.toPointer(dictBuffer);
 
     try {
-      return CompressionDict(cdict: _lib.ZSTD_createCDict(csrc.cast(), dict.length, level));
+      return Dict(cdict: _lib.ZSTD_createCDict(csrc.cast(), dictBuffer.length, level));
     } finally {
       free(csrc);
     }
@@ -161,28 +161,28 @@ class CompressionDict {
 ///
 ///
 /// Example:
-///   final ctx = CompressionContext.create();
+///   final ctx = Context.create();
 ///   try {
 ///     ctx.compress(...);
 ///   } finally {
 ///     ctx.dispose(); // release
 ///   }
 ///
-class CompressionContext {
-  CompressionContext({this.ctx});
+class Context {
+  Context({this.ctx});
 
   ffi.Pointer<ZSTD_CCtx_s> ctx;
 
-  factory CompressionContext.create() {
+  factory Context.create() {
     _lib ??= ZStd(_openLibrary());
 
-    return CompressionContext(ctx: _lib.ZSTD_createCCtx());
+    return Context(ctx: _lib.ZSTD_createCCtx());
   }
 
   Uint8List compress(
     Uint8List src, {
     int level: Level.levelDefault,
-    CompressionDict dict,
+    Dict dict,
   }) {
     final csrc = Uint8ArrayUtils.toPointer(src);
 
@@ -211,6 +211,66 @@ class CompressionContext {
 
   void dispose() {
     _lib.ZSTD_freeCCtx(ctx);
+    ctx = null;
+  }
+}
+
+class DecDict {
+  DecDict({this.ddict});
+
+  ffi.Pointer<ZSTD_DDict_s> ddict;
+
+  factory DecDict.create(Uint8List dictBuffer, {int level: Level.levelDefault}) {
+    final csrc = Uint8ArrayUtils.toPointer(dictBuffer);
+
+    try {
+      return DecDict(ddict: _lib.ZSTD_createDDict(csrc.cast(), dictBuffer.length));
+    } finally {
+      free(csrc);
+    }
+  }
+
+  void dispose() {
+    _lib.ZSTD_freeDDict(ddict);
+    ddict = null;
+  }
+}
+
+class DecContext {
+  DecContext({this.ctx});
+
+  ffi.Pointer<ZSTD_DCtx_s> ctx;
+
+  factory DecContext.create() {
+    _lib ??= ZStd(_openLibrary());
+
+    return DecContext(ctx: _lib.ZSTD_createDCtx());
+  }
+
+  Uint8List decompress(
+    Uint8List src, {
+    DecDict dict,
+  }) {
+    final csrc = Uint8ArrayUtils.toPointer(src);
+
+    final dstlen = _lib.ZSTD_getDecompressedSize(csrc.cast(), src.length);
+    final dst = allocate<ffi.Uint8>(count: dstlen);
+
+    try {
+      int reslen = _lib.ZSTD_decompress_usingDDict(ctx, dst.cast(), dstlen, csrc.cast(), src.length, dict.ddict);
+      if (_lib.ZSTD_isError(reslen) > 0) {
+        throw ZStdError.fromCode(reslen);
+      }
+
+      return Uint8ArrayUtils.fromPointer(dst, reslen);
+    } finally {
+      free(dst);
+      free(csrc);
+    }
+  }
+
+  void dispose() {
+    _lib.ZSTD_freeDCtx(ctx);
     ctx = null;
   }
 }

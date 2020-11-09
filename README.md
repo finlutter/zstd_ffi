@@ -5,9 +5,10 @@
 
 # Features
 - [x] Simple compress/decrompress
-- [] Dict
-- [] Context
-- [] Add Linux/Windows library
+- [x] Dict
+- [x] Context
+- [x] Add Linux library
+- [] Add Windows library
 
 # Upgrade zstd
 ```shell
