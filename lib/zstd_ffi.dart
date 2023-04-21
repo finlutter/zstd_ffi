@@ -133,7 +133,7 @@ class Dict {
 
   ffi.Pointer<ZSTD_CDict_s>? cdict;
 
-  factory Dict.create(Uint8List dictBuffer, {int level: Level.levelDefault}) {
+  factory Dict.create(Uint8List dictBuffer, {int level = Level.levelDefault}) {
     final csrc = Uint8ArrayUtils.toPointer(dictBuffer);
 
     try {
@@ -224,7 +224,7 @@ class DecDict {
   ffi.Pointer<ZSTD_DDict_s>? ddict;
 
   factory DecDict.create(Uint8List dictBuffer,
-      {int level: Level.levelDefault}) {
+      {int level = Level.levelDefault}) {
     final csrc = Uint8ArrayUtils.toPointer(dictBuffer);
 
     try {

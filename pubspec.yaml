@@ -1,11 +1,11 @@
 name: zstd_ffi
-description: zstd ffi binding for Dart. More better performance than flutter plugin.
+description: zstd ffi binding for Dart. Maybe better performance than flutter plugin.
 
 version: 0.1.0
 homepage: https://github.com/finlutter/zstd_ffi
 
 environment:
-  sdk: ">=2.19.0 <3.0.0"
+  sdk: ">=2.15.0 <3.0.0"
 
 dependencies:
   ffi: ^2.0.0

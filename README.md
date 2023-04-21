@@ -7,7 +7,7 @@
 - [x] Simple compress/decrompress
 - [x] Dict
 - [x] Context
-- [x] Add Linux library
+- [x] Add MacOS/Linux library
 - [] Add Windows library
 
 # Upgrade zstd

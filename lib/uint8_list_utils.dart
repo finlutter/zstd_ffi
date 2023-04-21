@@ -1,11 +1,11 @@
 import 'dart:ffi';
-import 'dart:io';
+
 import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 
 class Uint8ArrayUtils {
   static Uint8List fromPointer(Pointer<Uint8> ptr, int length,
-      {bool copy: true}) {
+      {bool copy = true}) {
     final view = ptr.asTypedList(length);
     final builder = BytesBuilder(copy: copy);
     builder.add(view);
