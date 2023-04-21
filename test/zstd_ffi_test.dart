@@ -5,7 +5,8 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 
 import 'package:zstd_ffi/zstd_ffi.dart';
-import 'package:zstd_ffi/_zstd.dart' show ZSTD_VERSION_STRING, ZSTD_VERSION_NUMBER;
+import 'package:zstd_ffi/_zstd.dart'
+    show ZSTD_VERSION_STRING, ZSTD_VERSION_NUMBER;
 
 void main() {
   test('library function', () {
@@ -14,8 +15,8 @@ void main() {
   });
 
   test('compress and decompress', () {
-    Uint8List src = utf8.encode('hello zstd');
-    final dst = compress(src, level: 1);
+    final src = utf8.encode('hello zstd');
+    final dst = compress(Uint8List.fromList(src), level: 1);
     print('${dst.length} ${dst}');
     expect(dst, isNotEmpty);
 
@@ -35,12 +36,12 @@ void main() {
   test('bulk compress', () {
     final ctx = Context.create();
 
-    Uint8List src = utf8.encode('hello zstd');
+    final src = utf8.encode('hello zstd');
 
     var dst;
 
     try {
-      dst = ctx.compress(src);
+      dst = ctx.compress(Uint8List.fromList(src));
     } finally {
       ctx.dispose();
     }
@@ -57,7 +58,7 @@ void main() {
     final ctx = Context.create();
     final dctx = DecContext.create();
 
-    Uint8List src = utf8.encode('hello zstd');
+    final src = utf8.encode('hello zstd');
 
     var dst;
 
@@ -65,7 +66,7 @@ void main() {
     final decdict = DecDict.create(File('dict/k500-d8.dict').readAsBytesSync());
 
     try {
-      dst = ctx.compress(src, dict: dict);
+      dst = ctx.compress(Uint8List.fromList(src), dict: dict);
     } finally {
       ctx.dispose();
       dict.dispose();

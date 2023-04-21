@@ -14,9 +14,9 @@
 ```shell
 # replace lib/zstd.h
 
-pub run ffigen
+dart run ffigen
 
-pub run test
+dart run test
 
 pub publish
 ```

@@ -5,29 +5,38 @@ import 'dart:ffi' as ffi;
 
 /// zstd ffi binding in Dart
 class ZStd {
-  /// Holds the Dynamic library.
-  final ffi.DynamicLibrary _dylib;
+  /// Holds the symbol lookup function.
+  final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
+      _lookup;
 
   /// The symbols are looked up in [dynamicLibrary].
-  ZStd(ffi.DynamicLibrary dynamicLibrary) : _dylib = dynamicLibrary;
+  ZStd(ffi.DynamicLibrary dynamicLibrary) : _lookup = dynamicLibrary.lookup;
+
+  /// The symbols are looked up with [lookup].
+  ZStd.fromLookup(
+      ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
+          lookup)
+      : _lookup = lookup;
 
   int ZSTD_versionNumber() {
-    _ZSTD_versionNumber ??=
-        _dylib.lookupFunction<_c_ZSTD_versionNumber, _dart_ZSTD_versionNumber>(
-            'ZSTD_versionNumber');
     return _ZSTD_versionNumber();
   }
 
-  _dart_ZSTD_versionNumber _ZSTD_versionNumber;
+  late final _ZSTD_versionNumberPtr =
+      _lookup<ffi.NativeFunction<ffi.UnsignedInt Function()>>(
+          'ZSTD_versionNumber');
+  late final _ZSTD_versionNumber =
+      _ZSTD_versionNumberPtr.asFunction<int Function()>();
 
-  ffi.Pointer<ffi.Int8> ZSTD_versionString() {
-    _ZSTD_versionString ??=
-        _dylib.lookupFunction<_c_ZSTD_versionString, _dart_ZSTD_versionString>(
-            'ZSTD_versionString');
+  ffi.Pointer<ffi.Char> ZSTD_versionString() {
     return _ZSTD_versionString();
   }
 
-  _dart_ZSTD_versionString _ZSTD_versionString;
+  late final _ZSTD_versionStringPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function()>>(
+          'ZSTD_versionString');
+  late final _ZSTD_versionString =
+      _ZSTD_versionStringPtr.asFunction<ffi.Pointer<ffi.Char> Function()>();
 
   int ZSTD_compress(
     ffi.Pointer<ffi.Void> dst,
@@ -36,8 +45,6 @@ class ZStd {
     int srcSize,
     int compressionLevel,
   ) {
-    _ZSTD_compress ??= _dylib
-        .lookupFunction<_c_ZSTD_compress, _dart_ZSTD_compress>('ZSTD_compress');
     return _ZSTD_compress(
       dst,
       dstCapacity,
@@ -47,7 +54,13 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_compress _ZSTD_compress;
+  late final _ZSTD_compressPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ffi.Void>, ffi.Size,
+              ffi.Pointer<ffi.Void>, ffi.Size, ffi.Int)>>('ZSTD_compress');
+  late final _ZSTD_compress = _ZSTD_compressPtr.asFunction<
+      int Function(
+          ffi.Pointer<ffi.Void>, int, ffi.Pointer<ffi.Void>, int, int)>();
 
   int ZSTD_decompress(
     ffi.Pointer<ffi.Void> dst,
@@ -55,9 +68,6 @@ class ZStd {
     ffi.Pointer<ffi.Void> src,
     int compressedSize,
   ) {
-    _ZSTD_decompress ??=
-        _dylib.lookupFunction<_c_ZSTD_decompress, _dart_ZSTD_decompress>(
-            'ZSTD_decompress');
     return _ZSTD_decompress(
       dst,
       dstCapacity,
@@ -66,141 +76,153 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_decompress _ZSTD_decompress;
+  late final _ZSTD_decompressPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ffi.Void>, ffi.Size,
+              ffi.Pointer<ffi.Void>, ffi.Size)>>('ZSTD_decompress');
+  late final _ZSTD_decompress = _ZSTD_decompressPtr.asFunction<
+      int Function(ffi.Pointer<ffi.Void>, int, ffi.Pointer<ffi.Void>, int)>();
 
   int ZSTD_getFrameContentSize(
     ffi.Pointer<ffi.Void> src,
     int srcSize,
   ) {
-    _ZSTD_getFrameContentSize ??= _dylib.lookupFunction<
-        _c_ZSTD_getFrameContentSize,
-        _dart_ZSTD_getFrameContentSize>('ZSTD_getFrameContentSize');
     return _ZSTD_getFrameContentSize(
       src,
       srcSize,
     );
   }
 
-  _dart_ZSTD_getFrameContentSize _ZSTD_getFrameContentSize;
+  late final _ZSTD_getFrameContentSizePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.UnsignedLongLong Function(
+              ffi.Pointer<ffi.Void>, ffi.Size)>>('ZSTD_getFrameContentSize');
+  late final _ZSTD_getFrameContentSize = _ZSTD_getFrameContentSizePtr
+      .asFunction<int Function(ffi.Pointer<ffi.Void>, int)>();
 
   int ZSTD_getDecompressedSize(
     ffi.Pointer<ffi.Void> src,
     int srcSize,
   ) {
-    _ZSTD_getDecompressedSize ??= _dylib.lookupFunction<
-        _c_ZSTD_getDecompressedSize,
-        _dart_ZSTD_getDecompressedSize>('ZSTD_getDecompressedSize');
     return _ZSTD_getDecompressedSize(
       src,
       srcSize,
     );
   }
 
-  _dart_ZSTD_getDecompressedSize _ZSTD_getDecompressedSize;
+  late final _ZSTD_getDecompressedSizePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.UnsignedLongLong Function(
+              ffi.Pointer<ffi.Void>, ffi.Size)>>('ZSTD_getDecompressedSize');
+  late final _ZSTD_getDecompressedSize = _ZSTD_getDecompressedSizePtr
+      .asFunction<int Function(ffi.Pointer<ffi.Void>, int)>();
 
   int ZSTD_findFrameCompressedSize(
     ffi.Pointer<ffi.Void> src,
     int srcSize,
   ) {
-    _ZSTD_findFrameCompressedSize ??= _dylib.lookupFunction<
-        _c_ZSTD_findFrameCompressedSize,
-        _dart_ZSTD_findFrameCompressedSize>('ZSTD_findFrameCompressedSize');
     return _ZSTD_findFrameCompressedSize(
       src,
       srcSize,
     );
   }
 
-  _dart_ZSTD_findFrameCompressedSize _ZSTD_findFrameCompressedSize;
+  late final _ZSTD_findFrameCompressedSizePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ffi.Void>,
+              ffi.Size)>>('ZSTD_findFrameCompressedSize');
+  late final _ZSTD_findFrameCompressedSize = _ZSTD_findFrameCompressedSizePtr
+      .asFunction<int Function(ffi.Pointer<ffi.Void>, int)>();
 
   int ZSTD_compressBound(
     int srcSize,
   ) {
-    _ZSTD_compressBound ??=
-        _dylib.lookupFunction<_c_ZSTD_compressBound, _dart_ZSTD_compressBound>(
-            'ZSTD_compressBound');
     return _ZSTD_compressBound(
       srcSize,
     );
   }
 
-  _dart_ZSTD_compressBound _ZSTD_compressBound;
+  late final _ZSTD_compressBoundPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Size)>>(
+          'ZSTD_compressBound');
+  late final _ZSTD_compressBound =
+      _ZSTD_compressBoundPtr.asFunction<int Function(int)>();
 
   int ZSTD_isError(
     int code,
   ) {
-    _ZSTD_isError ??= _dylib
-        .lookupFunction<_c_ZSTD_isError, _dart_ZSTD_isError>('ZSTD_isError');
     return _ZSTD_isError(
       code,
     );
   }
 
-  _dart_ZSTD_isError _ZSTD_isError;
+  late final _ZSTD_isErrorPtr =
+      _lookup<ffi.NativeFunction<ffi.UnsignedInt Function(ffi.Size)>>(
+          'ZSTD_isError');
+  late final _ZSTD_isError = _ZSTD_isErrorPtr.asFunction<int Function(int)>();
 
-  ffi.Pointer<ffi.Int8> ZSTD_getErrorName(
+  ffi.Pointer<ffi.Char> ZSTD_getErrorName(
     int code,
   ) {
-    _ZSTD_getErrorName ??=
-        _dylib.lookupFunction<_c_ZSTD_getErrorName, _dart_ZSTD_getErrorName>(
-            'ZSTD_getErrorName');
     return _ZSTD_getErrorName(
       code,
     );
   }
 
-  _dart_ZSTD_getErrorName _ZSTD_getErrorName;
+  late final _ZSTD_getErrorNamePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function(ffi.Size)>>(
+          'ZSTD_getErrorName');
+  late final _ZSTD_getErrorName =
+      _ZSTD_getErrorNamePtr.asFunction<ffi.Pointer<ffi.Char> Function(int)>();
 
   int ZSTD_minCLevel() {
-    _ZSTD_minCLevel ??=
-        _dylib.lookupFunction<_c_ZSTD_minCLevel, _dart_ZSTD_minCLevel>(
-            'ZSTD_minCLevel');
     return _ZSTD_minCLevel();
   }
 
-  _dart_ZSTD_minCLevel _ZSTD_minCLevel;
+  late final _ZSTD_minCLevelPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function()>>('ZSTD_minCLevel');
+  late final _ZSTD_minCLevel = _ZSTD_minCLevelPtr.asFunction<int Function()>();
 
   int ZSTD_maxCLevel() {
-    _ZSTD_maxCLevel ??=
-        _dylib.lookupFunction<_c_ZSTD_maxCLevel, _dart_ZSTD_maxCLevel>(
-            'ZSTD_maxCLevel');
     return _ZSTD_maxCLevel();
   }
 
-  _dart_ZSTD_maxCLevel _ZSTD_maxCLevel;
+  late final _ZSTD_maxCLevelPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function()>>('ZSTD_maxCLevel');
+  late final _ZSTD_maxCLevel = _ZSTD_maxCLevelPtr.asFunction<int Function()>();
 
-  ffi.Pointer<ZSTD_CCtx_s> ZSTD_createCCtx() {
-    _ZSTD_createCCtx ??=
-        _dylib.lookupFunction<_c_ZSTD_createCCtx, _dart_ZSTD_createCCtx>(
-            'ZSTD_createCCtx');
+  ffi.Pointer<ZSTD_CCtx> ZSTD_createCCtx() {
     return _ZSTD_createCCtx();
   }
 
-  _dart_ZSTD_createCCtx _ZSTD_createCCtx;
+  late final _ZSTD_createCCtxPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ZSTD_CCtx> Function()>>(
+          'ZSTD_createCCtx');
+  late final _ZSTD_createCCtx =
+      _ZSTD_createCCtxPtr.asFunction<ffi.Pointer<ZSTD_CCtx> Function()>();
 
   int ZSTD_freeCCtx(
-    ffi.Pointer<ZSTD_CCtx_s> cctx,
+    ffi.Pointer<ZSTD_CCtx> cctx,
   ) {
-    _ZSTD_freeCCtx ??= _dylib
-        .lookupFunction<_c_ZSTD_freeCCtx, _dart_ZSTD_freeCCtx>('ZSTD_freeCCtx');
     return _ZSTD_freeCCtx(
       cctx,
     );
   }
 
-  _dart_ZSTD_freeCCtx _ZSTD_freeCCtx;
+  late final _ZSTD_freeCCtxPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_CCtx>)>>(
+          'ZSTD_freeCCtx');
+  late final _ZSTD_freeCCtx =
+      _ZSTD_freeCCtxPtr.asFunction<int Function(ffi.Pointer<ZSTD_CCtx>)>();
 
   int ZSTD_compressCCtx(
-    ffi.Pointer<ZSTD_CCtx_s> cctx,
+    ffi.Pointer<ZSTD_CCtx> cctx,
     ffi.Pointer<ffi.Void> dst,
     int dstCapacity,
     ffi.Pointer<ffi.Void> src,
     int srcSize,
     int compressionLevel,
   ) {
-    _ZSTD_compressCCtx ??=
-        _dylib.lookupFunction<_c_ZSTD_compressCCtx, _dart_ZSTD_compressCCtx>(
-            'ZSTD_compressCCtx');
     return _ZSTD_compressCCtx(
       cctx,
       dst,
@@ -211,38 +233,50 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_compressCCtx _ZSTD_compressCCtx;
+  late final _ZSTD_compressCCtxPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<ZSTD_CCtx>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size,
+              ffi.Int)>>('ZSTD_compressCCtx');
+  late final _ZSTD_compressCCtx = _ZSTD_compressCCtxPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CCtx>, ffi.Pointer<ffi.Void>, int,
+          ffi.Pointer<ffi.Void>, int, int)>();
 
-  ffi.Pointer<ZSTD_DCtx_s> ZSTD_createDCtx() {
-    _ZSTD_createDCtx ??=
-        _dylib.lookupFunction<_c_ZSTD_createDCtx, _dart_ZSTD_createDCtx>(
-            'ZSTD_createDCtx');
+  ffi.Pointer<ZSTD_DCtx> ZSTD_createDCtx() {
     return _ZSTD_createDCtx();
   }
 
-  _dart_ZSTD_createDCtx _ZSTD_createDCtx;
+  late final _ZSTD_createDCtxPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ZSTD_DCtx> Function()>>(
+          'ZSTD_createDCtx');
+  late final _ZSTD_createDCtx =
+      _ZSTD_createDCtxPtr.asFunction<ffi.Pointer<ZSTD_DCtx> Function()>();
 
   int ZSTD_freeDCtx(
-    ffi.Pointer<ZSTD_DCtx_s> dctx,
+    ffi.Pointer<ZSTD_DCtx> dctx,
   ) {
-    _ZSTD_freeDCtx ??= _dylib
-        .lookupFunction<_c_ZSTD_freeDCtx, _dart_ZSTD_freeDCtx>('ZSTD_freeDCtx');
     return _ZSTD_freeDCtx(
       dctx,
     );
   }
 
-  _dart_ZSTD_freeDCtx _ZSTD_freeDCtx;
+  late final _ZSTD_freeDCtxPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_DCtx>)>>(
+          'ZSTD_freeDCtx');
+  late final _ZSTD_freeDCtx =
+      _ZSTD_freeDCtxPtr.asFunction<int Function(ffi.Pointer<ZSTD_DCtx>)>();
 
   int ZSTD_decompressDCtx(
-    ffi.Pointer<ZSTD_DCtx_s> dctx,
+    ffi.Pointer<ZSTD_DCtx> dctx,
     ffi.Pointer<ffi.Void> dst,
     int dstCapacity,
     ffi.Pointer<ffi.Void> src,
     int srcSize,
   ) {
-    _ZSTD_decompressDCtx ??= _dylib.lookupFunction<_c_ZSTD_decompressDCtx,
-        _dart_ZSTD_decompressDCtx>('ZSTD_decompressDCtx');
     return _ZSTD_decompressDCtx(
       dctx,
       dst,
@@ -252,15 +286,37 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_decompressDCtx _ZSTD_decompressDCtx;
+  late final _ZSTD_decompressDCtxPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<ZSTD_DCtx>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size)>>('ZSTD_decompressDCtx');
+  late final _ZSTD_decompressDCtx = _ZSTD_decompressDCtxPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_DCtx>, ffi.Pointer<ffi.Void>, int,
+          ffi.Pointer<ffi.Void>, int)>();
+
+  ZSTD_bounds ZSTD_cParam_getBounds(
+    int cParam,
+  ) {
+    return _ZSTD_cParam_getBounds(
+      cParam,
+    );
+  }
+
+  late final _ZSTD_cParam_getBoundsPtr =
+      _lookup<ffi.NativeFunction<ZSTD_bounds Function(ffi.Int32)>>(
+          'ZSTD_cParam_getBounds');
+  late final _ZSTD_cParam_getBounds =
+      _ZSTD_cParam_getBoundsPtr.asFunction<ZSTD_bounds Function(int)>();
 
   int ZSTD_CCtx_setParameter(
-    ffi.Pointer<ZSTD_CCtx_s> cctx,
+    ffi.Pointer<ZSTD_CCtx> cctx,
     int param,
     int value,
   ) {
-    _ZSTD_CCtx_setParameter ??= _dylib.lookupFunction<_c_ZSTD_CCtx_setParameter,
-        _dart_ZSTD_CCtx_setParameter>('ZSTD_CCtx_setParameter');
     return _ZSTD_CCtx_setParameter(
       cctx,
       param,
@@ -268,48 +324,54 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_CCtx_setParameter _ZSTD_CCtx_setParameter;
+  late final _ZSTD_CCtx_setParameterPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_CCtx>, ffi.Int32,
+              ffi.Int)>>('ZSTD_CCtx_setParameter');
+  late final _ZSTD_CCtx_setParameter = _ZSTD_CCtx_setParameterPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CCtx>, int, int)>();
 
   int ZSTD_CCtx_setPledgedSrcSize(
-    ffi.Pointer<ZSTD_CCtx_s> cctx,
+    ffi.Pointer<ZSTD_CCtx> cctx,
     int pledgedSrcSize,
   ) {
-    _ZSTD_CCtx_setPledgedSrcSize ??= _dylib.lookupFunction<
-        _c_ZSTD_CCtx_setPledgedSrcSize,
-        _dart_ZSTD_CCtx_setPledgedSrcSize>('ZSTD_CCtx_setPledgedSrcSize');
     return _ZSTD_CCtx_setPledgedSrcSize(
       cctx,
       pledgedSrcSize,
     );
   }
 
-  _dart_ZSTD_CCtx_setPledgedSrcSize _ZSTD_CCtx_setPledgedSrcSize;
+  late final _ZSTD_CCtx_setPledgedSrcSizePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_CCtx>,
+              ffi.UnsignedLongLong)>>('ZSTD_CCtx_setPledgedSrcSize');
+  late final _ZSTD_CCtx_setPledgedSrcSize = _ZSTD_CCtx_setPledgedSrcSizePtr
+      .asFunction<int Function(ffi.Pointer<ZSTD_CCtx>, int)>();
 
   int ZSTD_CCtx_reset(
-    ffi.Pointer<ZSTD_CCtx_s> cctx,
+    ffi.Pointer<ZSTD_CCtx> cctx,
     int reset,
   ) {
-    _ZSTD_CCtx_reset ??=
-        _dylib.lookupFunction<_c_ZSTD_CCtx_reset, _dart_ZSTD_CCtx_reset>(
-            'ZSTD_CCtx_reset');
     return _ZSTD_CCtx_reset(
       cctx,
       reset,
     );
   }
 
-  _dart_ZSTD_CCtx_reset _ZSTD_CCtx_reset;
+  late final _ZSTD_CCtx_resetPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<ZSTD_CCtx>, ffi.Int32)>>('ZSTD_CCtx_reset');
+  late final _ZSTD_CCtx_reset = _ZSTD_CCtx_resetPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CCtx>, int)>();
 
   int ZSTD_compress2(
-    ffi.Pointer<ZSTD_CCtx_s> cctx,
+    ffi.Pointer<ZSTD_CCtx> cctx,
     ffi.Pointer<ffi.Void> dst,
     int dstCapacity,
     ffi.Pointer<ffi.Void> src,
     int srcSize,
   ) {
-    _ZSTD_compress2 ??=
-        _dylib.lookupFunction<_c_ZSTD_compress2, _dart_ZSTD_compress2>(
-            'ZSTD_compress2');
     return _ZSTD_compress2(
       cctx,
       dst,
@@ -319,15 +381,33 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_compress2 _ZSTD_compress2;
+  late final _ZSTD_compress2Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_CCtx>, ffi.Pointer<ffi.Void>,
+              ffi.Size, ffi.Pointer<ffi.Void>, ffi.Size)>>('ZSTD_compress2');
+  late final _ZSTD_compress2 = _ZSTD_compress2Ptr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CCtx>, ffi.Pointer<ffi.Void>, int,
+          ffi.Pointer<ffi.Void>, int)>();
+
+  ZSTD_bounds ZSTD_dParam_getBounds(
+    int dParam,
+  ) {
+    return _ZSTD_dParam_getBounds(
+      dParam,
+    );
+  }
+
+  late final _ZSTD_dParam_getBoundsPtr =
+      _lookup<ffi.NativeFunction<ZSTD_bounds Function(ffi.Int32)>>(
+          'ZSTD_dParam_getBounds');
+  late final _ZSTD_dParam_getBounds =
+      _ZSTD_dParam_getBoundsPtr.asFunction<ZSTD_bounds Function(int)>();
 
   int ZSTD_DCtx_setParameter(
-    ffi.Pointer<ZSTD_DCtx_s> dctx,
+    ffi.Pointer<ZSTD_DCtx> dctx,
     int param,
     int value,
   ) {
-    _ZSTD_DCtx_setParameter ??= _dylib.lookupFunction<_c_ZSTD_DCtx_setParameter,
-        _dart_ZSTD_DCtx_setParameter>('ZSTD_DCtx_setParameter');
     return _ZSTD_DCtx_setParameter(
       dctx,
       param,
@@ -335,53 +415,60 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_DCtx_setParameter _ZSTD_DCtx_setParameter;
+  late final _ZSTD_DCtx_setParameterPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_DCtx>, ffi.Int32,
+              ffi.Int)>>('ZSTD_DCtx_setParameter');
+  late final _ZSTD_DCtx_setParameter = _ZSTD_DCtx_setParameterPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_DCtx>, int, int)>();
 
   int ZSTD_DCtx_reset(
-    ffi.Pointer<ZSTD_DCtx_s> dctx,
+    ffi.Pointer<ZSTD_DCtx> dctx,
     int reset,
   ) {
-    _ZSTD_DCtx_reset ??=
-        _dylib.lookupFunction<_c_ZSTD_DCtx_reset, _dart_ZSTD_DCtx_reset>(
-            'ZSTD_DCtx_reset');
     return _ZSTD_DCtx_reset(
       dctx,
       reset,
     );
   }
 
-  _dart_ZSTD_DCtx_reset _ZSTD_DCtx_reset;
+  late final _ZSTD_DCtx_resetPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<ZSTD_DCtx>, ffi.Int32)>>('ZSTD_DCtx_reset');
+  late final _ZSTD_DCtx_reset = _ZSTD_DCtx_resetPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_DCtx>, int)>();
 
-  ffi.Pointer<ZSTD_CCtx_s> ZSTD_createCStream() {
-    _ZSTD_createCStream ??=
-        _dylib.lookupFunction<_c_ZSTD_createCStream, _dart_ZSTD_createCStream>(
-            'ZSTD_createCStream');
+  ffi.Pointer<ZSTD_CStream> ZSTD_createCStream() {
     return _ZSTD_createCStream();
   }
 
-  _dart_ZSTD_createCStream _ZSTD_createCStream;
+  late final _ZSTD_createCStreamPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ZSTD_CStream> Function()>>(
+          'ZSTD_createCStream');
+  late final _ZSTD_createCStream =
+      _ZSTD_createCStreamPtr.asFunction<ffi.Pointer<ZSTD_CStream> Function()>();
 
   int ZSTD_freeCStream(
-    ffi.Pointer<ZSTD_CCtx_s> zcs,
+    ffi.Pointer<ZSTD_CStream> zcs,
   ) {
-    _ZSTD_freeCStream ??=
-        _dylib.lookupFunction<_c_ZSTD_freeCStream, _dart_ZSTD_freeCStream>(
-            'ZSTD_freeCStream');
     return _ZSTD_freeCStream(
       zcs,
     );
   }
 
-  _dart_ZSTD_freeCStream _ZSTD_freeCStream;
+  late final _ZSTD_freeCStreamPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_CStream>)>>(
+          'ZSTD_freeCStream');
+  late final _ZSTD_freeCStream = _ZSTD_freeCStreamPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CStream>)>();
 
   int ZSTD_compressStream2(
-    ffi.Pointer<ZSTD_CCtx_s> cctx,
+    ffi.Pointer<ZSTD_CCtx> cctx,
     ffi.Pointer<ZSTD_outBuffer> output,
     ffi.Pointer<ZSTD_inBuffer> input,
     int endOp,
   ) {
-    _ZSTD_compressStream2 ??= _dylib.lookupFunction<_c_ZSTD_compressStream2,
-        _dart_ZSTD_compressStream2>('ZSTD_compressStream2');
     return _ZSTD_compressStream2(
       cctx,
       output,
@@ -390,47 +477,54 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_compressStream2 _ZSTD_compressStream2;
+  late final _ZSTD_compressStream2Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_CCtx>, ffi.Pointer<ZSTD_outBuffer>,
+              ffi.Pointer<ZSTD_inBuffer>, ffi.Int32)>>('ZSTD_compressStream2');
+  late final _ZSTD_compressStream2 = _ZSTD_compressStream2Ptr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CCtx>, ffi.Pointer<ZSTD_outBuffer>,
+          ffi.Pointer<ZSTD_inBuffer>, int)>();
 
   int ZSTD_CStreamInSize() {
-    _ZSTD_CStreamInSize ??=
-        _dylib.lookupFunction<_c_ZSTD_CStreamInSize, _dart_ZSTD_CStreamInSize>(
-            'ZSTD_CStreamInSize');
     return _ZSTD_CStreamInSize();
   }
 
-  _dart_ZSTD_CStreamInSize _ZSTD_CStreamInSize;
+  late final _ZSTD_CStreamInSizePtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function()>>('ZSTD_CStreamInSize');
+  late final _ZSTD_CStreamInSize =
+      _ZSTD_CStreamInSizePtr.asFunction<int Function()>();
 
   int ZSTD_CStreamOutSize() {
-    _ZSTD_CStreamOutSize ??= _dylib.lookupFunction<_c_ZSTD_CStreamOutSize,
-        _dart_ZSTD_CStreamOutSize>('ZSTD_CStreamOutSize');
     return _ZSTD_CStreamOutSize();
   }
 
-  _dart_ZSTD_CStreamOutSize _ZSTD_CStreamOutSize;
+  late final _ZSTD_CStreamOutSizePtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function()>>('ZSTD_CStreamOutSize');
+  late final _ZSTD_CStreamOutSize =
+      _ZSTD_CStreamOutSizePtr.asFunction<int Function()>();
 
   int ZSTD_initCStream(
-    ffi.Pointer<ZSTD_CCtx_s> zcs,
+    ffi.Pointer<ZSTD_CStream> zcs,
     int compressionLevel,
   ) {
-    _ZSTD_initCStream ??=
-        _dylib.lookupFunction<_c_ZSTD_initCStream, _dart_ZSTD_initCStream>(
-            'ZSTD_initCStream');
     return _ZSTD_initCStream(
       zcs,
       compressionLevel,
     );
   }
 
-  _dart_ZSTD_initCStream _ZSTD_initCStream;
+  late final _ZSTD_initCStreamPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<ZSTD_CStream>, ffi.Int)>>('ZSTD_initCStream');
+  late final _ZSTD_initCStream = _ZSTD_initCStreamPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CStream>, int)>();
 
   int ZSTD_compressStream(
-    ffi.Pointer<ZSTD_CCtx_s> zcs,
+    ffi.Pointer<ZSTD_CStream> zcs,
     ffi.Pointer<ZSTD_outBuffer> output,
     ffi.Pointer<ZSTD_inBuffer> input,
   ) {
-    _ZSTD_compressStream ??= _dylib.lookupFunction<_c_ZSTD_compressStream,
-        _dart_ZSTD_compressStream>('ZSTD_compressStream');
     return _ZSTD_compressStream(
       zcs,
       output,
@@ -438,80 +532,93 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_compressStream _ZSTD_compressStream;
+  late final _ZSTD_compressStreamPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<ZSTD_CStream>,
+              ffi.Pointer<ZSTD_outBuffer>,
+              ffi.Pointer<ZSTD_inBuffer>)>>('ZSTD_compressStream');
+  late final _ZSTD_compressStream = _ZSTD_compressStreamPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CStream>, ffi.Pointer<ZSTD_outBuffer>,
+          ffi.Pointer<ZSTD_inBuffer>)>();
 
   int ZSTD_flushStream(
-    ffi.Pointer<ZSTD_CCtx_s> zcs,
+    ffi.Pointer<ZSTD_CStream> zcs,
     ffi.Pointer<ZSTD_outBuffer> output,
   ) {
-    _ZSTD_flushStream ??=
-        _dylib.lookupFunction<_c_ZSTD_flushStream, _dart_ZSTD_flushStream>(
-            'ZSTD_flushStream');
     return _ZSTD_flushStream(
       zcs,
       output,
     );
   }
 
-  _dart_ZSTD_flushStream _ZSTD_flushStream;
+  late final _ZSTD_flushStreamPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_CStream>,
+              ffi.Pointer<ZSTD_outBuffer>)>>('ZSTD_flushStream');
+  late final _ZSTD_flushStream = _ZSTD_flushStreamPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CStream>, ffi.Pointer<ZSTD_outBuffer>)>();
 
   int ZSTD_endStream(
-    ffi.Pointer<ZSTD_CCtx_s> zcs,
+    ffi.Pointer<ZSTD_CStream> zcs,
     ffi.Pointer<ZSTD_outBuffer> output,
   ) {
-    _ZSTD_endStream ??=
-        _dylib.lookupFunction<_c_ZSTD_endStream, _dart_ZSTD_endStream>(
-            'ZSTD_endStream');
     return _ZSTD_endStream(
       zcs,
       output,
     );
   }
 
-  _dart_ZSTD_endStream _ZSTD_endStream;
+  late final _ZSTD_endStreamPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_CStream>,
+              ffi.Pointer<ZSTD_outBuffer>)>>('ZSTD_endStream');
+  late final _ZSTD_endStream = _ZSTD_endStreamPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CStream>, ffi.Pointer<ZSTD_outBuffer>)>();
 
-  ffi.Pointer<ZSTD_DCtx_s> ZSTD_createDStream() {
-    _ZSTD_createDStream ??=
-        _dylib.lookupFunction<_c_ZSTD_createDStream, _dart_ZSTD_createDStream>(
-            'ZSTD_createDStream');
+  ffi.Pointer<ZSTD_DStream> ZSTD_createDStream() {
     return _ZSTD_createDStream();
   }
 
-  _dart_ZSTD_createDStream _ZSTD_createDStream;
+  late final _ZSTD_createDStreamPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ZSTD_DStream> Function()>>(
+          'ZSTD_createDStream');
+  late final _ZSTD_createDStream =
+      _ZSTD_createDStreamPtr.asFunction<ffi.Pointer<ZSTD_DStream> Function()>();
 
   int ZSTD_freeDStream(
-    ffi.Pointer<ZSTD_DCtx_s> zds,
+    ffi.Pointer<ZSTD_DStream> zds,
   ) {
-    _ZSTD_freeDStream ??=
-        _dylib.lookupFunction<_c_ZSTD_freeDStream, _dart_ZSTD_freeDStream>(
-            'ZSTD_freeDStream');
     return _ZSTD_freeDStream(
       zds,
     );
   }
 
-  _dart_ZSTD_freeDStream _ZSTD_freeDStream;
+  late final _ZSTD_freeDStreamPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_DStream>)>>(
+          'ZSTD_freeDStream');
+  late final _ZSTD_freeDStream = _ZSTD_freeDStreamPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_DStream>)>();
 
   int ZSTD_initDStream(
-    ffi.Pointer<ZSTD_DCtx_s> zds,
+    ffi.Pointer<ZSTD_DStream> zds,
   ) {
-    _ZSTD_initDStream ??=
-        _dylib.lookupFunction<_c_ZSTD_initDStream, _dart_ZSTD_initDStream>(
-            'ZSTD_initDStream');
     return _ZSTD_initDStream(
       zds,
     );
   }
 
-  _dart_ZSTD_initDStream _ZSTD_initDStream;
+  late final _ZSTD_initDStreamPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_DStream>)>>(
+          'ZSTD_initDStream');
+  late final _ZSTD_initDStream = _ZSTD_initDStreamPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_DStream>)>();
 
   int ZSTD_decompressStream(
-    ffi.Pointer<ZSTD_DCtx_s> zds,
+    ffi.Pointer<ZSTD_DStream> zds,
     ffi.Pointer<ZSTD_outBuffer> output,
     ffi.Pointer<ZSTD_inBuffer> input,
   ) {
-    _ZSTD_decompressStream ??= _dylib.lookupFunction<_c_ZSTD_decompressStream,
-        _dart_ZSTD_decompressStream>('ZSTD_decompressStream');
     return _ZSTD_decompressStream(
       zds,
       output,
@@ -519,27 +626,36 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_decompressStream _ZSTD_decompressStream;
+  late final _ZSTD_decompressStreamPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<ZSTD_DStream>,
+              ffi.Pointer<ZSTD_outBuffer>,
+              ffi.Pointer<ZSTD_inBuffer>)>>('ZSTD_decompressStream');
+  late final _ZSTD_decompressStream = _ZSTD_decompressStreamPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_DStream>, ffi.Pointer<ZSTD_outBuffer>,
+          ffi.Pointer<ZSTD_inBuffer>)>();
 
   int ZSTD_DStreamInSize() {
-    _ZSTD_DStreamInSize ??=
-        _dylib.lookupFunction<_c_ZSTD_DStreamInSize, _dart_ZSTD_DStreamInSize>(
-            'ZSTD_DStreamInSize');
     return _ZSTD_DStreamInSize();
   }
 
-  _dart_ZSTD_DStreamInSize _ZSTD_DStreamInSize;
+  late final _ZSTD_DStreamInSizePtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function()>>('ZSTD_DStreamInSize');
+  late final _ZSTD_DStreamInSize =
+      _ZSTD_DStreamInSizePtr.asFunction<int Function()>();
 
   int ZSTD_DStreamOutSize() {
-    _ZSTD_DStreamOutSize ??= _dylib.lookupFunction<_c_ZSTD_DStreamOutSize,
-        _dart_ZSTD_DStreamOutSize>('ZSTD_DStreamOutSize');
     return _ZSTD_DStreamOutSize();
   }
 
-  _dart_ZSTD_DStreamOutSize _ZSTD_DStreamOutSize;
+  late final _ZSTD_DStreamOutSizePtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function()>>('ZSTD_DStreamOutSize');
+  late final _ZSTD_DStreamOutSize =
+      _ZSTD_DStreamOutSizePtr.asFunction<int Function()>();
 
   int ZSTD_compress_usingDict(
-    ffi.Pointer<ZSTD_CCtx_s> ctx,
+    ffi.Pointer<ZSTD_CCtx> ctx,
     ffi.Pointer<ffi.Void> dst,
     int dstCapacity,
     ffi.Pointer<ffi.Void> src,
@@ -548,9 +664,6 @@ class ZStd {
     int dictSize,
     int compressionLevel,
   ) {
-    _ZSTD_compress_usingDict ??= _dylib.lookupFunction<
-        _c_ZSTD_compress_usingDict,
-        _dart_ZSTD_compress_usingDict>('ZSTD_compress_usingDict');
     return _ZSTD_compress_usingDict(
       ctx,
       dst,
@@ -563,10 +676,23 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_compress_usingDict _ZSTD_compress_usingDict;
+  late final _ZSTD_compress_usingDictPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<ZSTD_CCtx>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size,
+              ffi.Int)>>('ZSTD_compress_usingDict');
+  late final _ZSTD_compress_usingDict = _ZSTD_compress_usingDictPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CCtx>, ffi.Pointer<ffi.Void>, int,
+          ffi.Pointer<ffi.Void>, int, ffi.Pointer<ffi.Void>, int, int)>();
 
   int ZSTD_decompress_usingDict(
-    ffi.Pointer<ZSTD_DCtx_s> dctx,
+    ffi.Pointer<ZSTD_DCtx> dctx,
     ffi.Pointer<ffi.Void> dst,
     int dstCapacity,
     ffi.Pointer<ffi.Void> src,
@@ -574,9 +700,6 @@ class ZStd {
     ffi.Pointer<ffi.Void> dict,
     int dictSize,
   ) {
-    _ZSTD_decompress_usingDict ??= _dylib.lookupFunction<
-        _c_ZSTD_decompress_usingDict,
-        _dart_ZSTD_decompress_usingDict>('ZSTD_decompress_usingDict');
     return _ZSTD_decompress_usingDict(
       dctx,
       dst,
@@ -588,16 +711,26 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_decompress_usingDict _ZSTD_decompress_usingDict;
+  late final _ZSTD_decompress_usingDictPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<ZSTD_DCtx>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size)>>('ZSTD_decompress_usingDict');
+  late final _ZSTD_decompress_usingDict =
+      _ZSTD_decompress_usingDictPtr.asFunction<
+          int Function(ffi.Pointer<ZSTD_DCtx>, ffi.Pointer<ffi.Void>, int,
+              ffi.Pointer<ffi.Void>, int, ffi.Pointer<ffi.Void>, int)>();
 
-  ffi.Pointer<ZSTD_CDict_s> ZSTD_createCDict(
+  ffi.Pointer<ZSTD_CDict> ZSTD_createCDict(
     ffi.Pointer<ffi.Void> dictBuffer,
     int dictSize,
     int compressionLevel,
   ) {
-    _ZSTD_createCDict ??=
-        _dylib.lookupFunction<_c_ZSTD_createCDict, _dart_ZSTD_createCDict>(
-            'ZSTD_createCDict');
     return _ZSTD_createCDict(
       dictBuffer,
       dictSize,
@@ -605,32 +738,35 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_createCDict _ZSTD_createCDict;
+  late final _ZSTD_createCDictPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ZSTD_CDict> Function(
+              ffi.Pointer<ffi.Void>, ffi.Size, ffi.Int)>>('ZSTD_createCDict');
+  late final _ZSTD_createCDict = _ZSTD_createCDictPtr.asFunction<
+      ffi.Pointer<ZSTD_CDict> Function(ffi.Pointer<ffi.Void>, int, int)>();
 
   int ZSTD_freeCDict(
-    ffi.Pointer<ZSTD_CDict_s> CDict,
+    ffi.Pointer<ZSTD_CDict> CDict,
   ) {
-    _ZSTD_freeCDict ??=
-        _dylib.lookupFunction<_c_ZSTD_freeCDict, _dart_ZSTD_freeCDict>(
-            'ZSTD_freeCDict');
     return _ZSTD_freeCDict(
       CDict,
     );
   }
 
-  _dart_ZSTD_freeCDict _ZSTD_freeCDict;
+  late final _ZSTD_freeCDictPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_CDict>)>>(
+          'ZSTD_freeCDict');
+  late final _ZSTD_freeCDict =
+      _ZSTD_freeCDictPtr.asFunction<int Function(ffi.Pointer<ZSTD_CDict>)>();
 
   int ZSTD_compress_usingCDict(
-    ffi.Pointer<ZSTD_CCtx_s> cctx,
+    ffi.Pointer<ZSTD_CCtx> cctx,
     ffi.Pointer<ffi.Void> dst,
     int dstCapacity,
     ffi.Pointer<ffi.Void> src,
     int srcSize,
-    ffi.Pointer<ZSTD_CDict_s> cdict,
+    ffi.Pointer<ZSTD_CDict> cdict,
   ) {
-    _ZSTD_compress_usingCDict ??= _dylib.lookupFunction<
-        _c_ZSTD_compress_usingCDict,
-        _dart_ZSTD_compress_usingCDict>('ZSTD_compress_usingCDict');
     return _ZSTD_compress_usingCDict(
       cctx,
       dst,
@@ -641,47 +777,59 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_compress_usingCDict _ZSTD_compress_usingCDict;
+  late final _ZSTD_compress_usingCDictPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<ZSTD_CCtx>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size,
+              ffi.Pointer<ZSTD_CDict>)>>('ZSTD_compress_usingCDict');
+  late final _ZSTD_compress_usingCDict =
+      _ZSTD_compress_usingCDictPtr.asFunction<
+          int Function(ffi.Pointer<ZSTD_CCtx>, ffi.Pointer<ffi.Void>, int,
+              ffi.Pointer<ffi.Void>, int, ffi.Pointer<ZSTD_CDict>)>();
 
-  ffi.Pointer<ZSTD_DDict_s> ZSTD_createDDict(
+  ffi.Pointer<ZSTD_DDict> ZSTD_createDDict(
     ffi.Pointer<ffi.Void> dictBuffer,
     int dictSize,
   ) {
-    _ZSTD_createDDict ??=
-        _dylib.lookupFunction<_c_ZSTD_createDDict, _dart_ZSTD_createDDict>(
-            'ZSTD_createDDict');
     return _ZSTD_createDDict(
       dictBuffer,
       dictSize,
     );
   }
 
-  _dart_ZSTD_createDDict _ZSTD_createDDict;
+  late final _ZSTD_createDDictPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ZSTD_DDict> Function(
+              ffi.Pointer<ffi.Void>, ffi.Size)>>('ZSTD_createDDict');
+  late final _ZSTD_createDDict = _ZSTD_createDDictPtr.asFunction<
+      ffi.Pointer<ZSTD_DDict> Function(ffi.Pointer<ffi.Void>, int)>();
 
   int ZSTD_freeDDict(
-    ffi.Pointer<ZSTD_DDict_s> ddict,
+    ffi.Pointer<ZSTD_DDict> ddict,
   ) {
-    _ZSTD_freeDDict ??=
-        _dylib.lookupFunction<_c_ZSTD_freeDDict, _dart_ZSTD_freeDDict>(
-            'ZSTD_freeDDict');
     return _ZSTD_freeDDict(
       ddict,
     );
   }
 
-  _dart_ZSTD_freeDDict _ZSTD_freeDDict;
+  late final _ZSTD_freeDDictPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_DDict>)>>(
+          'ZSTD_freeDDict');
+  late final _ZSTD_freeDDict =
+      _ZSTD_freeDDictPtr.asFunction<int Function(ffi.Pointer<ZSTD_DDict>)>();
 
   int ZSTD_decompress_usingDDict(
-    ffi.Pointer<ZSTD_DCtx_s> dctx,
+    ffi.Pointer<ZSTD_DCtx> dctx,
     ffi.Pointer<ffi.Void> dst,
     int dstCapacity,
     ffi.Pointer<ffi.Void> src,
     int srcSize,
-    ffi.Pointer<ZSTD_DDict_s> ddict,
+    ffi.Pointer<ZSTD_DDict> ddict,
   ) {
-    _ZSTD_decompress_usingDDict ??= _dylib.lookupFunction<
-        _c_ZSTD_decompress_usingDDict,
-        _dart_ZSTD_decompress_usingDDict>('ZSTD_decompress_usingDDict');
     return _ZSTD_decompress_usingDDict(
       dctx,
       dst,
@@ -692,59 +840,74 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_decompress_usingDDict _ZSTD_decompress_usingDDict;
+  late final _ZSTD_decompress_usingDDictPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<ZSTD_DCtx>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size,
+              ffi.Pointer<ffi.Void>,
+              ffi.Size,
+              ffi.Pointer<ZSTD_DDict>)>>('ZSTD_decompress_usingDDict');
+  late final _ZSTD_decompress_usingDDict =
+      _ZSTD_decompress_usingDDictPtr.asFunction<
+          int Function(ffi.Pointer<ZSTD_DCtx>, ffi.Pointer<ffi.Void>, int,
+              ffi.Pointer<ffi.Void>, int, ffi.Pointer<ZSTD_DDict>)>();
 
   int ZSTD_getDictID_fromDict(
     ffi.Pointer<ffi.Void> dict,
     int dictSize,
   ) {
-    _ZSTD_getDictID_fromDict ??= _dylib.lookupFunction<
-        _c_ZSTD_getDictID_fromDict,
-        _dart_ZSTD_getDictID_fromDict>('ZSTD_getDictID_fromDict');
     return _ZSTD_getDictID_fromDict(
       dict,
       dictSize,
     );
   }
 
-  _dart_ZSTD_getDictID_fromDict _ZSTD_getDictID_fromDict;
+  late final _ZSTD_getDictID_fromDictPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.UnsignedInt Function(
+              ffi.Pointer<ffi.Void>, ffi.Size)>>('ZSTD_getDictID_fromDict');
+  late final _ZSTD_getDictID_fromDict = _ZSTD_getDictID_fromDictPtr.asFunction<
+      int Function(ffi.Pointer<ffi.Void>, int)>();
 
   int ZSTD_getDictID_fromDDict(
-    ffi.Pointer<ZSTD_DDict_s> ddict,
+    ffi.Pointer<ZSTD_DDict> ddict,
   ) {
-    _ZSTD_getDictID_fromDDict ??= _dylib.lookupFunction<
-        _c_ZSTD_getDictID_fromDDict,
-        _dart_ZSTD_getDictID_fromDDict>('ZSTD_getDictID_fromDDict');
     return _ZSTD_getDictID_fromDDict(
       ddict,
     );
   }
 
-  _dart_ZSTD_getDictID_fromDDict _ZSTD_getDictID_fromDDict;
+  late final _ZSTD_getDictID_fromDDictPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.UnsignedInt Function(
+              ffi.Pointer<ZSTD_DDict>)>>('ZSTD_getDictID_fromDDict');
+  late final _ZSTD_getDictID_fromDDict = _ZSTD_getDictID_fromDDictPtr
+      .asFunction<int Function(ffi.Pointer<ZSTD_DDict>)>();
 
   int ZSTD_getDictID_fromFrame(
     ffi.Pointer<ffi.Void> src,
     int srcSize,
   ) {
-    _ZSTD_getDictID_fromFrame ??= _dylib.lookupFunction<
-        _c_ZSTD_getDictID_fromFrame,
-        _dart_ZSTD_getDictID_fromFrame>('ZSTD_getDictID_fromFrame');
     return _ZSTD_getDictID_fromFrame(
       src,
       srcSize,
     );
   }
 
-  _dart_ZSTD_getDictID_fromFrame _ZSTD_getDictID_fromFrame;
+  late final _ZSTD_getDictID_fromFramePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.UnsignedInt Function(
+              ffi.Pointer<ffi.Void>, ffi.Size)>>('ZSTD_getDictID_fromFrame');
+  late final _ZSTD_getDictID_fromFrame = _ZSTD_getDictID_fromFramePtr
+      .asFunction<int Function(ffi.Pointer<ffi.Void>, int)>();
 
   int ZSTD_CCtx_loadDictionary(
-    ffi.Pointer<ZSTD_CCtx_s> cctx,
+    ffi.Pointer<ZSTD_CCtx> cctx,
     ffi.Pointer<ffi.Void> dict,
     int dictSize,
   ) {
-    _ZSTD_CCtx_loadDictionary ??= _dylib.lookupFunction<
-        _c_ZSTD_CCtx_loadDictionary,
-        _dart_ZSTD_CCtx_loadDictionary>('ZSTD_CCtx_loadDictionary');
     return _ZSTD_CCtx_loadDictionary(
       cctx,
       dict,
@@ -752,30 +915,36 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_CCtx_loadDictionary _ZSTD_CCtx_loadDictionary;
+  late final _ZSTD_CCtx_loadDictionaryPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_CCtx>, ffi.Pointer<ffi.Void>,
+              ffi.Size)>>('ZSTD_CCtx_loadDictionary');
+  late final _ZSTD_CCtx_loadDictionary =
+      _ZSTD_CCtx_loadDictionaryPtr.asFunction<
+          int Function(ffi.Pointer<ZSTD_CCtx>, ffi.Pointer<ffi.Void>, int)>();
 
   int ZSTD_CCtx_refCDict(
-    ffi.Pointer<ZSTD_CCtx_s> cctx,
-    ffi.Pointer<ZSTD_CDict_s> cdict,
+    ffi.Pointer<ZSTD_CCtx> cctx,
+    ffi.Pointer<ZSTD_CDict> cdict,
   ) {
-    _ZSTD_CCtx_refCDict ??=
-        _dylib.lookupFunction<_c_ZSTD_CCtx_refCDict, _dart_ZSTD_CCtx_refCDict>(
-            'ZSTD_CCtx_refCDict');
     return _ZSTD_CCtx_refCDict(
       cctx,
       cdict,
     );
   }
 
-  _dart_ZSTD_CCtx_refCDict _ZSTD_CCtx_refCDict;
+  late final _ZSTD_CCtx_refCDictPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_CCtx>,
+              ffi.Pointer<ZSTD_CDict>)>>('ZSTD_CCtx_refCDict');
+  late final _ZSTD_CCtx_refCDict = _ZSTD_CCtx_refCDictPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CCtx>, ffi.Pointer<ZSTD_CDict>)>();
 
   int ZSTD_CCtx_refPrefix(
-    ffi.Pointer<ZSTD_CCtx_s> cctx,
+    ffi.Pointer<ZSTD_CCtx> cctx,
     ffi.Pointer<ffi.Void> prefix,
     int prefixSize,
   ) {
-    _ZSTD_CCtx_refPrefix ??= _dylib.lookupFunction<_c_ZSTD_CCtx_refPrefix,
-        _dart_ZSTD_CCtx_refPrefix>('ZSTD_CCtx_refPrefix');
     return _ZSTD_CCtx_refPrefix(
       cctx,
       prefix,
@@ -783,16 +952,18 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_CCtx_refPrefix _ZSTD_CCtx_refPrefix;
+  late final _ZSTD_CCtx_refPrefixPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_CCtx>, ffi.Pointer<ffi.Void>,
+              ffi.Size)>>('ZSTD_CCtx_refPrefix');
+  late final _ZSTD_CCtx_refPrefix = _ZSTD_CCtx_refPrefixPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CCtx>, ffi.Pointer<ffi.Void>, int)>();
 
   int ZSTD_DCtx_loadDictionary(
-    ffi.Pointer<ZSTD_DCtx_s> dctx,
+    ffi.Pointer<ZSTD_DCtx> dctx,
     ffi.Pointer<ffi.Void> dict,
     int dictSize,
   ) {
-    _ZSTD_DCtx_loadDictionary ??= _dylib.lookupFunction<
-        _c_ZSTD_DCtx_loadDictionary,
-        _dart_ZSTD_DCtx_loadDictionary>('ZSTD_DCtx_loadDictionary');
     return _ZSTD_DCtx_loadDictionary(
       dctx,
       dict,
@@ -800,30 +971,36 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_DCtx_loadDictionary _ZSTD_DCtx_loadDictionary;
+  late final _ZSTD_DCtx_loadDictionaryPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_DCtx>, ffi.Pointer<ffi.Void>,
+              ffi.Size)>>('ZSTD_DCtx_loadDictionary');
+  late final _ZSTD_DCtx_loadDictionary =
+      _ZSTD_DCtx_loadDictionaryPtr.asFunction<
+          int Function(ffi.Pointer<ZSTD_DCtx>, ffi.Pointer<ffi.Void>, int)>();
 
   int ZSTD_DCtx_refDDict(
-    ffi.Pointer<ZSTD_DCtx_s> dctx,
-    ffi.Pointer<ZSTD_DDict_s> ddict,
+    ffi.Pointer<ZSTD_DCtx> dctx,
+    ffi.Pointer<ZSTD_DDict> ddict,
   ) {
-    _ZSTD_DCtx_refDDict ??=
-        _dylib.lookupFunction<_c_ZSTD_DCtx_refDDict, _dart_ZSTD_DCtx_refDDict>(
-            'ZSTD_DCtx_refDDict');
     return _ZSTD_DCtx_refDDict(
       dctx,
       ddict,
     );
   }
 
-  _dart_ZSTD_DCtx_refDDict _ZSTD_DCtx_refDDict;
+  late final _ZSTD_DCtx_refDDictPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_DCtx>,
+              ffi.Pointer<ZSTD_DDict>)>>('ZSTD_DCtx_refDDict');
+  late final _ZSTD_DCtx_refDDict = _ZSTD_DCtx_refDDictPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_DCtx>, ffi.Pointer<ZSTD_DDict>)>();
 
   int ZSTD_DCtx_refPrefix(
-    ffi.Pointer<ZSTD_DCtx_s> dctx,
+    ffi.Pointer<ZSTD_DCtx> dctx,
     ffi.Pointer<ffi.Void> prefix,
     int prefixSize,
   ) {
-    _ZSTD_DCtx_refPrefix ??= _dylib.lookupFunction<_c_ZSTD_DCtx_refPrefix,
-        _dart_ZSTD_DCtx_refPrefix>('ZSTD_DCtx_refPrefix');
     return _ZSTD_DCtx_refPrefix(
       dctx,
       prefix,
@@ -831,88 +1008,105 @@ class ZStd {
     );
   }
 
-  _dart_ZSTD_DCtx_refPrefix _ZSTD_DCtx_refPrefix;
+  late final _ZSTD_DCtx_refPrefixPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ZSTD_DCtx>, ffi.Pointer<ffi.Void>,
+              ffi.Size)>>('ZSTD_DCtx_refPrefix');
+  late final _ZSTD_DCtx_refPrefix = _ZSTD_DCtx_refPrefixPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_DCtx>, ffi.Pointer<ffi.Void>, int)>();
 
   int ZSTD_sizeof_CCtx(
-    ffi.Pointer<ZSTD_CCtx_s> cctx,
+    ffi.Pointer<ZSTD_CCtx> cctx,
   ) {
-    _ZSTD_sizeof_CCtx ??=
-        _dylib.lookupFunction<_c_ZSTD_sizeof_CCtx, _dart_ZSTD_sizeof_CCtx>(
-            'ZSTD_sizeof_CCtx');
     return _ZSTD_sizeof_CCtx(
       cctx,
     );
   }
 
-  _dart_ZSTD_sizeof_CCtx _ZSTD_sizeof_CCtx;
+  late final _ZSTD_sizeof_CCtxPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_CCtx>)>>(
+          'ZSTD_sizeof_CCtx');
+  late final _ZSTD_sizeof_CCtx =
+      _ZSTD_sizeof_CCtxPtr.asFunction<int Function(ffi.Pointer<ZSTD_CCtx>)>();
 
   int ZSTD_sizeof_DCtx(
-    ffi.Pointer<ZSTD_DCtx_s> dctx,
+    ffi.Pointer<ZSTD_DCtx> dctx,
   ) {
-    _ZSTD_sizeof_DCtx ??=
-        _dylib.lookupFunction<_c_ZSTD_sizeof_DCtx, _dart_ZSTD_sizeof_DCtx>(
-            'ZSTD_sizeof_DCtx');
     return _ZSTD_sizeof_DCtx(
       dctx,
     );
   }
 
-  _dart_ZSTD_sizeof_DCtx _ZSTD_sizeof_DCtx;
+  late final _ZSTD_sizeof_DCtxPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_DCtx>)>>(
+          'ZSTD_sizeof_DCtx');
+  late final _ZSTD_sizeof_DCtx =
+      _ZSTD_sizeof_DCtxPtr.asFunction<int Function(ffi.Pointer<ZSTD_DCtx>)>();
 
   int ZSTD_sizeof_CStream(
-    ffi.Pointer<ZSTD_CCtx_s> zcs,
+    ffi.Pointer<ZSTD_CStream> zcs,
   ) {
-    _ZSTD_sizeof_CStream ??= _dylib.lookupFunction<_c_ZSTD_sizeof_CStream,
-        _dart_ZSTD_sizeof_CStream>('ZSTD_sizeof_CStream');
     return _ZSTD_sizeof_CStream(
       zcs,
     );
   }
 
-  _dart_ZSTD_sizeof_CStream _ZSTD_sizeof_CStream;
+  late final _ZSTD_sizeof_CStreamPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_CStream>)>>(
+          'ZSTD_sizeof_CStream');
+  late final _ZSTD_sizeof_CStream = _ZSTD_sizeof_CStreamPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_CStream>)>();
 
   int ZSTD_sizeof_DStream(
-    ffi.Pointer<ZSTD_DCtx_s> zds,
+    ffi.Pointer<ZSTD_DStream> zds,
   ) {
-    _ZSTD_sizeof_DStream ??= _dylib.lookupFunction<_c_ZSTD_sizeof_DStream,
-        _dart_ZSTD_sizeof_DStream>('ZSTD_sizeof_DStream');
     return _ZSTD_sizeof_DStream(
       zds,
     );
   }
 
-  _dart_ZSTD_sizeof_DStream _ZSTD_sizeof_DStream;
+  late final _ZSTD_sizeof_DStreamPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_DStream>)>>(
+          'ZSTD_sizeof_DStream');
+  late final _ZSTD_sizeof_DStream = _ZSTD_sizeof_DStreamPtr.asFunction<
+      int Function(ffi.Pointer<ZSTD_DStream>)>();
 
   int ZSTD_sizeof_CDict(
-    ffi.Pointer<ZSTD_CDict_s> cdict,
+    ffi.Pointer<ZSTD_CDict> cdict,
   ) {
-    _ZSTD_sizeof_CDict ??=
-        _dylib.lookupFunction<_c_ZSTD_sizeof_CDict, _dart_ZSTD_sizeof_CDict>(
-            'ZSTD_sizeof_CDict');
     return _ZSTD_sizeof_CDict(
       cdict,
     );
   }
 
-  _dart_ZSTD_sizeof_CDict _ZSTD_sizeof_CDict;
+  late final _ZSTD_sizeof_CDictPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_CDict>)>>(
+          'ZSTD_sizeof_CDict');
+  late final _ZSTD_sizeof_CDict =
+      _ZSTD_sizeof_CDictPtr.asFunction<int Function(ffi.Pointer<ZSTD_CDict>)>();
 
   int ZSTD_sizeof_DDict(
-    ffi.Pointer<ZSTD_DDict_s> ddict,
+    ffi.Pointer<ZSTD_DDict> ddict,
   ) {
-    _ZSTD_sizeof_DDict ??=
-        _dylib.lookupFunction<_c_ZSTD_sizeof_DDict, _dart_ZSTD_sizeof_DDict>(
-            'ZSTD_sizeof_DDict');
     return _ZSTD_sizeof_DDict(
       ddict,
     );
   }
 
-  _dart_ZSTD_sizeof_DDict _ZSTD_sizeof_DDict;
+  late final _ZSTD_sizeof_DDictPtr =
+      _lookup<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ZSTD_DDict>)>>(
+          'ZSTD_sizeof_DDict');
+  late final _ZSTD_sizeof_DDict =
+      _ZSTD_sizeof_DDictPtr.asFunction<int Function(ffi.Pointer<ZSTD_DDict>)>();
 }
 
-class ZSTD_CCtx_s extends ffi.Struct {}
+class ZSTD_CCtx_s extends ffi.Opaque {}
 
-class ZSTD_DCtx_s extends ffi.Struct {}
+typedef ZSTD_CCtx = ZSTD_CCtx_s;
+
+class ZSTD_DCtx_s extends ffi.Opaque {}
+
+typedef ZSTD_DCtx = ZSTD_DCtx_s;
 
 abstract class ZSTD_strategy {
   static const int ZSTD_fast = 1;
@@ -959,14 +1153,14 @@ abstract class ZSTD_cParameter {
 }
 
 class ZSTD_bounds extends ffi.Struct {
-  @ffi.Uint64()
-  int error;
+  @ffi.Size()
+  external int error;
 
-  @ffi.Int32()
-  int lowerBound;
+  @ffi.Int()
+  external int lowerBound;
 
-  @ffi.Int32()
-  int upperBound;
+  @ffi.Int()
+  external int upperBound;
 }
 
 abstract class ZSTD_ResetDirective {
@@ -982,25 +1176,27 @@ abstract class ZSTD_dParameter {
   static const int ZSTD_d_experimentalParam3 = 1002;
 }
 
-class ZSTD_inBuffer extends ffi.Struct {
-  ffi.Pointer<ffi.Void> src;
+class ZSTD_inBuffer_s extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> src;
 
-  @ffi.Uint64()
-  int size;
+  @ffi.Size()
+  external int size;
 
-  @ffi.Uint64()
-  int pos;
+  @ffi.Size()
+  external int pos;
 }
 
-class ZSTD_outBuffer extends ffi.Struct {
-  ffi.Pointer<ffi.Void> dst;
+class ZSTD_outBuffer_s extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> dst;
 
-  @ffi.Uint64()
-  int size;
+  @ffi.Size()
+  external int size;
 
-  @ffi.Uint64()
-  int pos;
+  @ffi.Size()
+  external int pos;
 }
+
+typedef ZSTD_CStream = ZSTD_CCtx;
 
 abstract class ZSTD_EndDirective {
   static const int ZSTD_e_continue = 0;
@@ -1008,9 +1204,17 @@ abstract class ZSTD_EndDirective {
   static const int ZSTD_e_end = 2;
 }
 
-class ZSTD_CDict_s extends ffi.Struct {}
+typedef ZSTD_outBuffer = ZSTD_outBuffer_s;
+typedef ZSTD_inBuffer = ZSTD_inBuffer_s;
+typedef ZSTD_DStream = ZSTD_DCtx;
 
-class ZSTD_DDict_s extends ffi.Struct {}
+class ZSTD_CDict_s extends ffi.Opaque {}
+
+typedef ZSTD_CDict = ZSTD_CDict_s;
+
+class ZSTD_DDict_s extends ffi.Opaque {}
+
+typedef ZSTD_DDict = ZSTD_DDict_s;
 
 const int ZSTD_VERSION_MAJOR = 1;
 
@@ -1039,607 +1243,3 @@ const int ZSTD_BLOCKSIZE_MAX = 131072;
 const int ZSTD_CONTENTSIZE_UNKNOWN = -1;
 
 const int ZSTD_CONTENTSIZE_ERROR = -2;
-
-typedef _c_ZSTD_versionNumber = ffi.Uint32 Function();
-
-typedef _dart_ZSTD_versionNumber = int Function();
-
-typedef _c_ZSTD_versionString = ffi.Pointer<ffi.Int8> Function();
-
-typedef _dart_ZSTD_versionString = ffi.Pointer<ffi.Int8> Function();
-
-typedef _c_ZSTD_compress = ffi.Uint64 Function(
-  ffi.Pointer<ffi.Void> dst,
-  ffi.Uint64 dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 srcSize,
-  ffi.Int32 compressionLevel,
-);
-
-typedef _dart_ZSTD_compress = int Function(
-  ffi.Pointer<ffi.Void> dst,
-  int dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  int srcSize,
-  int compressionLevel,
-);
-
-typedef _c_ZSTD_decompress = ffi.Uint64 Function(
-  ffi.Pointer<ffi.Void> dst,
-  ffi.Uint64 dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 compressedSize,
-);
-
-typedef _dart_ZSTD_decompress = int Function(
-  ffi.Pointer<ffi.Void> dst,
-  int dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  int compressedSize,
-);
-
-typedef _c_ZSTD_getFrameContentSize = ffi.Uint64 Function(
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 srcSize,
-);
-
-typedef _dart_ZSTD_getFrameContentSize = int Function(
-  ffi.Pointer<ffi.Void> src,
-  int srcSize,
-);
-
-typedef _c_ZSTD_getDecompressedSize = ffi.Uint64 Function(
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 srcSize,
-);
-
-typedef _dart_ZSTD_getDecompressedSize = int Function(
-  ffi.Pointer<ffi.Void> src,
-  int srcSize,
-);
-
-typedef _c_ZSTD_findFrameCompressedSize = ffi.Uint64 Function(
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 srcSize,
-);
-
-typedef _dart_ZSTD_findFrameCompressedSize = int Function(
-  ffi.Pointer<ffi.Void> src,
-  int srcSize,
-);
-
-typedef _c_ZSTD_compressBound = ffi.Uint64 Function(
-  ffi.Uint64 srcSize,
-);
-
-typedef _dart_ZSTD_compressBound = int Function(
-  int srcSize,
-);
-
-typedef _c_ZSTD_isError = ffi.Uint32 Function(
-  ffi.Uint64 code,
-);
-
-typedef _dart_ZSTD_isError = int Function(
-  int code,
-);
-
-typedef _c_ZSTD_getErrorName = ffi.Pointer<ffi.Int8> Function(
-  ffi.Uint64 code,
-);
-
-typedef _dart_ZSTD_getErrorName = ffi.Pointer<ffi.Int8> Function(
-  int code,
-);
-
-typedef _c_ZSTD_minCLevel = ffi.Int32 Function();
-
-typedef _dart_ZSTD_minCLevel = int Function();
-
-typedef _c_ZSTD_maxCLevel = ffi.Int32 Function();
-
-typedef _dart_ZSTD_maxCLevel = int Function();
-
-typedef _c_ZSTD_createCCtx = ffi.Pointer<ZSTD_CCtx_s> Function();
-
-typedef _dart_ZSTD_createCCtx = ffi.Pointer<ZSTD_CCtx_s> Function();
-
-typedef _c_ZSTD_freeCCtx = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-);
-
-typedef _dart_ZSTD_freeCCtx = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-);
-
-typedef _c_ZSTD_compressCCtx = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ffi.Void> dst,
-  ffi.Uint64 dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 srcSize,
-  ffi.Int32 compressionLevel,
-);
-
-typedef _dart_ZSTD_compressCCtx = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ffi.Void> dst,
-  int dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  int srcSize,
-  int compressionLevel,
-);
-
-typedef _c_ZSTD_createDCtx = ffi.Pointer<ZSTD_DCtx_s> Function();
-
-typedef _dart_ZSTD_createDCtx = ffi.Pointer<ZSTD_DCtx_s> Function();
-
-typedef _c_ZSTD_freeDCtx = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-);
-
-typedef _dart_ZSTD_freeDCtx = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-);
-
-typedef _c_ZSTD_decompressDCtx = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Pointer<ffi.Void> dst,
-  ffi.Uint64 dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 srcSize,
-);
-
-typedef _dart_ZSTD_decompressDCtx = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Pointer<ffi.Void> dst,
-  int dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  int srcSize,
-);
-
-typedef _c_ZSTD_CCtx_setParameter = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Int32 param,
-  ffi.Int32 value,
-);
-
-typedef _dart_ZSTD_CCtx_setParameter = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  int param,
-  int value,
-);
-
-typedef _c_ZSTD_CCtx_setPledgedSrcSize = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Uint64 pledgedSrcSize,
-);
-
-typedef _dart_ZSTD_CCtx_setPledgedSrcSize = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  int pledgedSrcSize,
-);
-
-typedef _c_ZSTD_CCtx_reset = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Int32 reset,
-);
-
-typedef _dart_ZSTD_CCtx_reset = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  int reset,
-);
-
-typedef _c_ZSTD_compress2 = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ffi.Void> dst,
-  ffi.Uint64 dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 srcSize,
-);
-
-typedef _dart_ZSTD_compress2 = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ffi.Void> dst,
-  int dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  int srcSize,
-);
-
-typedef _c_ZSTD_DCtx_setParameter = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Int32 param,
-  ffi.Int32 value,
-);
-
-typedef _dart_ZSTD_DCtx_setParameter = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  int param,
-  int value,
-);
-
-typedef _c_ZSTD_DCtx_reset = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Int32 reset,
-);
-
-typedef _dart_ZSTD_DCtx_reset = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  int reset,
-);
-
-typedef _c_ZSTD_createCStream = ffi.Pointer<ZSTD_CCtx_s> Function();
-
-typedef _dart_ZSTD_createCStream = ffi.Pointer<ZSTD_CCtx_s> Function();
-
-typedef _c_ZSTD_freeCStream = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> zcs,
-);
-
-typedef _dart_ZSTD_freeCStream = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> zcs,
-);
-
-typedef _c_ZSTD_compressStream2 = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ZSTD_outBuffer> output,
-  ffi.Pointer<ZSTD_inBuffer> input,
-  ffi.Int32 endOp,
-);
-
-typedef _dart_ZSTD_compressStream2 = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ZSTD_outBuffer> output,
-  ffi.Pointer<ZSTD_inBuffer> input,
-  int endOp,
-);
-
-typedef _c_ZSTD_CStreamInSize = ffi.Uint64 Function();
-
-typedef _dart_ZSTD_CStreamInSize = int Function();
-
-typedef _c_ZSTD_CStreamOutSize = ffi.Uint64 Function();
-
-typedef _dart_ZSTD_CStreamOutSize = int Function();
-
-typedef _c_ZSTD_initCStream = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> zcs,
-  ffi.Int32 compressionLevel,
-);
-
-typedef _dart_ZSTD_initCStream = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> zcs,
-  int compressionLevel,
-);
-
-typedef _c_ZSTD_compressStream = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> zcs,
-  ffi.Pointer<ZSTD_outBuffer> output,
-  ffi.Pointer<ZSTD_inBuffer> input,
-);
-
-typedef _dart_ZSTD_compressStream = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> zcs,
-  ffi.Pointer<ZSTD_outBuffer> output,
-  ffi.Pointer<ZSTD_inBuffer> input,
-);
-
-typedef _c_ZSTD_flushStream = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> zcs,
-  ffi.Pointer<ZSTD_outBuffer> output,
-);
-
-typedef _dart_ZSTD_flushStream = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> zcs,
-  ffi.Pointer<ZSTD_outBuffer> output,
-);
-
-typedef _c_ZSTD_endStream = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> zcs,
-  ffi.Pointer<ZSTD_outBuffer> output,
-);
-
-typedef _dart_ZSTD_endStream = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> zcs,
-  ffi.Pointer<ZSTD_outBuffer> output,
-);
-
-typedef _c_ZSTD_createDStream = ffi.Pointer<ZSTD_DCtx_s> Function();
-
-typedef _dart_ZSTD_createDStream = ffi.Pointer<ZSTD_DCtx_s> Function();
-
-typedef _c_ZSTD_freeDStream = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> zds,
-);
-
-typedef _dart_ZSTD_freeDStream = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> zds,
-);
-
-typedef _c_ZSTD_initDStream = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> zds,
-);
-
-typedef _dart_ZSTD_initDStream = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> zds,
-);
-
-typedef _c_ZSTD_decompressStream = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> zds,
-  ffi.Pointer<ZSTD_outBuffer> output,
-  ffi.Pointer<ZSTD_inBuffer> input,
-);
-
-typedef _dart_ZSTD_decompressStream = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> zds,
-  ffi.Pointer<ZSTD_outBuffer> output,
-  ffi.Pointer<ZSTD_inBuffer> input,
-);
-
-typedef _c_ZSTD_DStreamInSize = ffi.Uint64 Function();
-
-typedef _dart_ZSTD_DStreamInSize = int Function();
-
-typedef _c_ZSTD_DStreamOutSize = ffi.Uint64 Function();
-
-typedef _dart_ZSTD_DStreamOutSize = int Function();
-
-typedef _c_ZSTD_compress_usingDict = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> ctx,
-  ffi.Pointer<ffi.Void> dst,
-  ffi.Uint64 dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 srcSize,
-  ffi.Pointer<ffi.Void> dict,
-  ffi.Uint64 dictSize,
-  ffi.Int32 compressionLevel,
-);
-
-typedef _dart_ZSTD_compress_usingDict = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> ctx,
-  ffi.Pointer<ffi.Void> dst,
-  int dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  int srcSize,
-  ffi.Pointer<ffi.Void> dict,
-  int dictSize,
-  int compressionLevel,
-);
-
-typedef _c_ZSTD_decompress_usingDict = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Pointer<ffi.Void> dst,
-  ffi.Uint64 dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 srcSize,
-  ffi.Pointer<ffi.Void> dict,
-  ffi.Uint64 dictSize,
-);
-
-typedef _dart_ZSTD_decompress_usingDict = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Pointer<ffi.Void> dst,
-  int dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  int srcSize,
-  ffi.Pointer<ffi.Void> dict,
-  int dictSize,
-);
-
-typedef _c_ZSTD_createCDict = ffi.Pointer<ZSTD_CDict_s> Function(
-  ffi.Pointer<ffi.Void> dictBuffer,
-  ffi.Uint64 dictSize,
-  ffi.Int32 compressionLevel,
-);
-
-typedef _dart_ZSTD_createCDict = ffi.Pointer<ZSTD_CDict_s> Function(
-  ffi.Pointer<ffi.Void> dictBuffer,
-  int dictSize,
-  int compressionLevel,
-);
-
-typedef _c_ZSTD_freeCDict = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CDict_s> CDict,
-);
-
-typedef _dart_ZSTD_freeCDict = int Function(
-  ffi.Pointer<ZSTD_CDict_s> CDict,
-);
-
-typedef _c_ZSTD_compress_usingCDict = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ffi.Void> dst,
-  ffi.Uint64 dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 srcSize,
-  ffi.Pointer<ZSTD_CDict_s> cdict,
-);
-
-typedef _dart_ZSTD_compress_usingCDict = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ffi.Void> dst,
-  int dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  int srcSize,
-  ffi.Pointer<ZSTD_CDict_s> cdict,
-);
-
-typedef _c_ZSTD_createDDict = ffi.Pointer<ZSTD_DDict_s> Function(
-  ffi.Pointer<ffi.Void> dictBuffer,
-  ffi.Uint64 dictSize,
-);
-
-typedef _dart_ZSTD_createDDict = ffi.Pointer<ZSTD_DDict_s> Function(
-  ffi.Pointer<ffi.Void> dictBuffer,
-  int dictSize,
-);
-
-typedef _c_ZSTD_freeDDict = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DDict_s> ddict,
-);
-
-typedef _dart_ZSTD_freeDDict = int Function(
-  ffi.Pointer<ZSTD_DDict_s> ddict,
-);
-
-typedef _c_ZSTD_decompress_usingDDict = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Pointer<ffi.Void> dst,
-  ffi.Uint64 dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 srcSize,
-  ffi.Pointer<ZSTD_DDict_s> ddict,
-);
-
-typedef _dart_ZSTD_decompress_usingDDict = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Pointer<ffi.Void> dst,
-  int dstCapacity,
-  ffi.Pointer<ffi.Void> src,
-  int srcSize,
-  ffi.Pointer<ZSTD_DDict_s> ddict,
-);
-
-typedef _c_ZSTD_getDictID_fromDict = ffi.Uint32 Function(
-  ffi.Pointer<ffi.Void> dict,
-  ffi.Uint64 dictSize,
-);
-
-typedef _dart_ZSTD_getDictID_fromDict = int Function(
-  ffi.Pointer<ffi.Void> dict,
-  int dictSize,
-);
-
-typedef _c_ZSTD_getDictID_fromDDict = ffi.Uint32 Function(
-  ffi.Pointer<ZSTD_DDict_s> ddict,
-);
-
-typedef _dart_ZSTD_getDictID_fromDDict = int Function(
-  ffi.Pointer<ZSTD_DDict_s> ddict,
-);
-
-typedef _c_ZSTD_getDictID_fromFrame = ffi.Uint32 Function(
-  ffi.Pointer<ffi.Void> src,
-  ffi.Uint64 srcSize,
-);
-
-typedef _dart_ZSTD_getDictID_fromFrame = int Function(
-  ffi.Pointer<ffi.Void> src,
-  int srcSize,
-);
-
-typedef _c_ZSTD_CCtx_loadDictionary = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ffi.Void> dict,
-  ffi.Uint64 dictSize,
-);
-
-typedef _dart_ZSTD_CCtx_loadDictionary = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ffi.Void> dict,
-  int dictSize,
-);
-
-typedef _c_ZSTD_CCtx_refCDict = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ZSTD_CDict_s> cdict,
-);
-
-typedef _dart_ZSTD_CCtx_refCDict = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ZSTD_CDict_s> cdict,
-);
-
-typedef _c_ZSTD_CCtx_refPrefix = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ffi.Void> prefix,
-  ffi.Uint64 prefixSize,
-);
-
-typedef _dart_ZSTD_CCtx_refPrefix = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-  ffi.Pointer<ffi.Void> prefix,
-  int prefixSize,
-);
-
-typedef _c_ZSTD_DCtx_loadDictionary = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Pointer<ffi.Void> dict,
-  ffi.Uint64 dictSize,
-);
-
-typedef _dart_ZSTD_DCtx_loadDictionary = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Pointer<ffi.Void> dict,
-  int dictSize,
-);
-
-typedef _c_ZSTD_DCtx_refDDict = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Pointer<ZSTD_DDict_s> ddict,
-);
-
-typedef _dart_ZSTD_DCtx_refDDict = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Pointer<ZSTD_DDict_s> ddict,
-);
-
-typedef _c_ZSTD_DCtx_refPrefix = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Pointer<ffi.Void> prefix,
-  ffi.Uint64 prefixSize,
-);
-
-typedef _dart_ZSTD_DCtx_refPrefix = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-  ffi.Pointer<ffi.Void> prefix,
-  int prefixSize,
-);
-
-typedef _c_ZSTD_sizeof_CCtx = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-);
-
-typedef _dart_ZSTD_sizeof_CCtx = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> cctx,
-);
-
-typedef _c_ZSTD_sizeof_DCtx = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-);
-
-typedef _dart_ZSTD_sizeof_DCtx = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> dctx,
-);
-
-typedef _c_ZSTD_sizeof_CStream = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CCtx_s> zcs,
-);
-
-typedef _dart_ZSTD_sizeof_CStream = int Function(
-  ffi.Pointer<ZSTD_CCtx_s> zcs,
-);
-
-typedef _c_ZSTD_sizeof_DStream = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DCtx_s> zds,
-);
-
-typedef _dart_ZSTD_sizeof_DStream = int Function(
-  ffi.Pointer<ZSTD_DCtx_s> zds,
-);
-
-typedef _c_ZSTD_sizeof_CDict = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_CDict_s> cdict,
-);
-
-typedef _dart_ZSTD_sizeof_CDict = int Function(
-  ffi.Pointer<ZSTD_CDict_s> cdict,
-);
-
-typedef _c_ZSTD_sizeof_DDict = ffi.Uint64 Function(
-  ffi.Pointer<ZSTD_DDict_s> ddict,
-);
-
-typedef _dart_ZSTD_sizeof_DDict = int Function(
-  ffi.Pointer<ZSTD_DDict_s> ddict,
-);
