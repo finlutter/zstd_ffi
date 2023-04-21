@@ -1,3 +1,7 @@
+## 0.1.0
+
+Upgrade to dart 2.19
+
 ## 0.0.5
 
 Add Context/DecContext and Dict/DecDict.
